@@ -1,6 +1,8 @@
 import { Deployer } from "@matterlabs/hardhat-zksync";
+import { ethers } from "ethers";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { Contract, Provider } from "zksync-ethers";
+import { HDNodeWallet } from "ethers";
 
 interface Verify {
     address: string;
@@ -18,6 +20,26 @@ export function getWeth(testnet: boolean): string {
     const mainnetWeth = "0x3439153EB7AF838Ad19d56E1571FBD09333C2809";
 
     return testnet ? testnetWeth : mainnetWeth;
+}
+
+export function getHashProducer(testnet: boolean): string {
+    return testnet ? "0xc2bDed4B045bfdB5F051a13a55ed63FeEA45CB00" : "0x9b81Ec6F1Efa11d80835F2C1E8ae7fD46C522cdD";
+}
+
+export function getPlatformFeeCollector(testnet: boolean): string {
+    return testnet ? "0x25bbEDE914021Fdb13B57d9866bB370965d015c1" : "0xc41Fbb7538dD5a74E76390d7878E3F6d245Bf5EA";
+}
+
+export function getHash(salt: string) {
+    return ethers.keccak256(ethers.solidityPacked(["bytes32"], [salt]));
+}
+
+export function getSalt(mnemonic: string, tokenIndex: number, roundIndex: number): string {
+    const path = `m/44'/60'/${tokenIndex}'/0/${roundIndex}`;
+
+    const wallet = HDNodeWallet.fromPhrase(mnemonic, undefined, path);
+
+    return wallet.privateKey;
 }
 
 export async function deploy(deployer: Deployer, contractName: string, args: any[] = []): Promise<Contract> {
