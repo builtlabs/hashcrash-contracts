@@ -36,7 +36,11 @@ const config: HardhatUserConfig = {
         currency: "USD",
     },
     networks: {
-        hardhat: {},
+        hardhat: {
+            accounts: {
+                count: 100,
+            },
+        },
         abstractTestnet: {
             url: "https://api.testnet.abs.xyz",
             ethNetwork: "sepolia",
