@@ -10,8 +10,8 @@
     "test": "npx hardhat test --network hardhat",
     "coverage": "npx hardhat coverage",
     "compile": "npx hardhat compile --network abstractTestnet",
-    "deploy:main": "npx hardhat compile --network abstractMainnet && npx hardhat deploy-zksync --script mainnet.ts --network abstractMainnet",
-    "deploy:test": "npx hardhat compile --network abstractTestnet && npx hardhat deploy-zksync --script testnet.ts --network abstractTestnet"
+    "deploy:main": "npx hardhat deploy-zksync --script mainnet.ts --network abstractMainnet",
+    "deploy:test": "npx hardhat deploy-zksync --script testnet.ts --network abstractTestnet"
   },
   "devDependencies": {
     "@matterlabs/hardhat-zksync": "^1.5.0",
