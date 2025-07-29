@@ -11,6 +11,7 @@
     "coverage": "npx hardhat coverage",
     "compile": "npx hardhat compile --network abstractMainnet",
     "deploy:main": "npx hardhat deploy-zksync --script mainnet.ts --network abstractMainnet",
+    "deploy:points": "npx hardhat deploy-zksync --script points.ts --network abstractMainnet",
     "deploy:test": "npx hardhat deploy-zksync --script testnet.ts --network abstractTestnet"
   },
   "devDependencies": {
