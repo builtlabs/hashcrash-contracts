@@ -5115,3 +5115,1314 @@ export const SEASON_THREE = [
         points: 2,
     },
 ];
+
+export const SEASON_FOUR = [
+    {
+        account: "0x2975960f498d1f1645dbf82086425ff5f6de9451",
+        points: 1798776,
+    },
+    {
+        account: "0xa6f16af57929f88a950f2b37e40da39e6c55d498",
+        points: 718739,
+    },
+    {
+        account: "0x3d08649bc4473c6614b5d861438dfa584f92b4e4",
+        points: 563132,
+    },
+    {
+        account: "0x66d64c7c16e5f84d11b7fb90cc2a86d63e5d4ba9",
+        points: 544975,
+    },
+    {
+        account: "0xcba4c42264334ecb251c29655154214c8d1bf9b8",
+        points: 495690,
+    },
+    {
+        account: "0xe598a97b511404e4e98c767e2410704dc8cb3ae8",
+        points: 368445,
+    },
+    {
+        account: "0x0da127eedf90c160ae0f9d88402c7ed7b38fcd07",
+        points: 342668,
+    },
+    {
+        account: "0x6f6a1031d81a88fd929f8b0b1c4c1c567d592800",
+        points: 305492,
+    },
+    {
+        account: "0x519b74b13ed2cb5c74030771bc31145b777fc766",
+        points: 205815,
+    },
+    {
+        account: "0x3f8dc1d5090f78c3198279a98988d190d43da778",
+        points: 201141,
+    },
+    {
+        account: "0xda2ca34d57242cbe18f3046925645668b9e60292",
+        points: 147412,
+    },
+    {
+        account: "0x4a255373d89e42a534e31e55a33f77807b150bfe",
+        points: 140506,
+    },
+    {
+        account: "0xd16a966582f28a1ee7a88043e6dd318ccf8bb8be",
+        points: 132668,
+    },
+    {
+        account: "0xcc1be87141525590e9a6a98fcbaeffc26419cb10",
+        points: 123129,
+    },
+    {
+        account: "0xc2a71b6d16b502375c8b40a82e08477655d75f2d",
+        points: 122806,
+    },
+    {
+        account: "0x3ed6f7f7bb789a8d9247c9861f116d3a6a5bde2f",
+        points: 119610,
+    },
+    {
+        account: "0xfeb0c6ece4e54f38a87183ab23749d08b103b4ab",
+        points: 92128,
+    },
+    {
+        account: "0x1c5ee3f343567192a0204dcc749f19b874fc7694",
+        points: 80202,
+    },
+    {
+        account: "0xa774821a7db3e81c0f46058c20a166e31046d970",
+        points: 65346,
+    },
+    {
+        account: "0xa004ec84709a4efa1620fb7dbc6a69aceca62842",
+        points: 62149,
+    },
+    {
+        account: "0x3cc6ea7c1a992bd7634c50925ae87e4d9bc23bb7",
+        points: 59510,
+    },
+    {
+        account: "0x0649976f6dd8a2589af8790076f2c08909dd9337",
+        points: 58033,
+    },
+    {
+        account: "0xe1163ce3b9699ab623c944a0af39ab07a972c4b1",
+        points: 54873,
+    },
+    {
+        account: "0x5531ad3a3d7d9c10ffde5b2519cd3ef3340e546d",
+        points: 51348,
+    },
+    {
+        account: "0x917a67de1a4e29d8820e1aeafd1e7e53f19f2df7",
+        points: 49921,
+    },
+    {
+        account: "0x9b4c6f592d755c0a633915548746ee491ecb3f17",
+        points: 49777,
+    },
+    {
+        account: "0x870216dbb426f595e111fdfe088ca7a355b88460",
+        points: 48611,
+    },
+    {
+        account: "0x3dc88b8884153ddfb76d177f9bb8d1b5bf377917",
+        points: 48416,
+    },
+    {
+        account: "0x2945cedcebace2c931f242ce72a2fa459079af2f",
+        points: 44224,
+    },
+    {
+        account: "0x0a650a2b9b4116a08e44f8c92943f1cffca5e5ef",
+        points: 37380,
+    },
+    {
+        account: "0xe6d811979a67320c2fb3e82b8305aac67d9251d3",
+        points: 29936,
+    },
+    {
+        account: "0xacd784094c89818b17877e06cdc5714730d23bd3",
+        points: 29810,
+    },
+    {
+        account: "0x1faaee3b3675bdece62098044689dc46ebc8e568",
+        points: 29399,
+    },
+    {
+        account: "0xf674912ae2406243a3846a00be3affbac870a862",
+        points: 27734,
+    },
+    {
+        account: "0xfb663ea02cbf904636be2334a151fcf491f9eff6",
+        points: 23980,
+    },
+    {
+        account: "0xbdcbfb83265a534ef72d47d30dfb393f85d39e92",
+        points: 23270,
+    },
+    {
+        account: "0xf8f70fb2e33384508454c471d8cb422c45ae63d2",
+        points: 23024,
+    },
+    {
+        account: "0x1355ce52f7c3facd1698e8475519d5aa660921d5",
+        points: 22439,
+    },
+    {
+        account: "0x231c54a618cb9a0f2dfe186cb2f7aa5b2046c3a0",
+        points: 20907,
+    },
+    {
+        account: "0x86f45ceb833dfef1c58b140c6babf7b754f8a6c3",
+        points: 20898,
+    },
+    {
+        account: "0x0f554a5ee7654aa8abad027886cfa4bbc6426f63",
+        points: 18600,
+    },
+    {
+        account: "0xcc44c4c62c8a18b2a7a2348127816858dcea7c1c",
+        points: 18590,
+    },
+    {
+        account: "0xae5b249b300384dea95a8a9db15ae17ee469b21a",
+        points: 17436,
+    },
+    {
+        account: "0x14973a0ac7065f39abaee7ec0942429fb540e9e5",
+        points: 16332,
+    },
+    {
+        account: "0xdfcf5914de4b9c883d28d880b4e57b97e4d8e034",
+        points: 15190,
+    },
+    {
+        account: "0x05ed79351e233f8ce664ed0346420865681b2104",
+        points: 14349,
+    },
+    {
+        account: "0xda3f7e25a4b6ddaf1b05409b1c66fa556f783562",
+        points: 14332,
+    },
+    {
+        account: "0x645cc457b6d6d24c3f0756e019421e555ee10da8",
+        points: 13011,
+    },
+    {
+        account: "0xfe50b794a564b49cf4925f77d81f5f773d9eb5a0",
+        points: 12969,
+    },
+    {
+        account: "0xbbb9ca462d49780fec0865997f07b5b6cd7a78a9",
+        points: 12656,
+    },
+    {
+        account: "0x02db0ae8290f6330ab4e59bb710df51978df58c8",
+        points: 12480,
+    },
+    {
+        account: "0x80b8682ca40a7566d3deef94dc629f3fd2ddef45",
+        points: 12124,
+    },
+    {
+        account: "0x4b65736ede4ecfd6e745bcb903c1b8611a326613",
+        points: 10870,
+    },
+    {
+        account: "0x805250c42442a9dba0d2dd41a7a5816cb923ccf0",
+        points: 10280,
+    },
+    {
+        account: "0x210b63dece14f0f56611d267fb59af16a0849f7d",
+        points: 9780,
+    },
+    {
+        account: "0xe472b3db47fd9864d64ed5fb4037880a11634950",
+        points: 9360,
+    },
+    {
+        account: "0x7d5531c90a931a7dbc847411fd1018374f5cdf78",
+        points: 9100,
+    },
+    {
+        account: "0xe6cea553a27a570d1fa0e7612e6a8dcd9321077f",
+        points: 9042,
+    },
+    {
+        account: "0xe49d48ad96662b856f438fde1aa078bdc71b2179",
+        points: 8991,
+    },
+    {
+        account: "0x0ebae39b5a8dae2021de24bdbab8498ae61ce16b",
+        points: 8940,
+    },
+    {
+        account: "0x13d5118981cd30e5df6881878154f6031a505f6f",
+        points: 8340,
+    },
+    {
+        account: "0x1cb913b51e33b4d1ff559f94a3e3ab303615857e",
+        points: 8057,
+    },
+    {
+        account: "0xee92e3d0989373bcc9c7defec388d5ee9e3fbc1f",
+        points: 7466,
+    },
+    {
+        account: "0x3d79df5802f8913bb237a07fd5dc34b2322985c3",
+        points: 7060,
+    },
+    {
+        account: "0x6d0dd10abce340d01a37eb17095004567234e343",
+        points: 7037,
+    },
+    {
+        account: "0x7d241602796203f28ce400d07edae8e884bcb436",
+        points: 6900,
+    },
+    {
+        account: "0x4e636f73541c4182a36745f739a39184eb55c816",
+        points: 6396,
+    },
+    {
+        account: "0x4bd5e342cc4232c37d8885e2ba4bd0b8566235b3",
+        points: 6235,
+    },
+    {
+        account: "0xc9256737a5e7e936b7195e3389557dd199991289",
+        points: 6088,
+    },
+    {
+        account: "0xc60a6d12a073957b403abf414fe7b0c6abab67ca",
+        points: 6078,
+    },
+    {
+        account: "0xd27325495ccb080e21be485b97e622b50410ba03",
+        points: 6049,
+    },
+    {
+        account: "0xe73a19a8da5f853e3a6b234e3fe28519085d177f",
+        points: 6000,
+    },
+    {
+        account: "0x4355995495a91e3e099fcdcc113f2a75acafbd91",
+        points: 5910,
+    },
+    {
+        account: "0x14fc41130f8e143a281991f16256d4a1871ede3e",
+        points: 5834,
+    },
+    {
+        account: "0x8c67ceadc65cc663cbfc34131fa0a6e20748dbb4",
+        points: 5820,
+    },
+    {
+        account: "0x5cfd72d14bedf4df441d15c2eeaba4ead1315e8a",
+        points: 5700,
+    },
+    {
+        account: "0x4ce3e3082f5b73d81a40832f2d89d69d24c819bd",
+        points: 5460,
+    },
+    {
+        account: "0xd0d968b9c7ba3d2458e212534d7e3b3254fd013e",
+        points: 5450,
+    },
+    {
+        account: "0xf3418e834292f3d627a6ff38b0128c44c8c33fb5",
+        points: 5314,
+    },
+    {
+        account: "0x49dc0e3743e9f44fae2ff3dc1a7c98cfacfaccd7",
+        points: 5000,
+    },
+    {
+        account: "0x60507e8be97cb8906236724072b8ab763e76d53f",
+        points: 4680,
+    },
+    {
+        account: "0xfe38839b3b832e147cccdf30fcb43b9d402c2061",
+        points: 3583,
+    },
+    {
+        account: "0x93a5eb302be0f56dcfbb55b3dfaba5b0b470575a",
+        points: 3384,
+    },
+    {
+        account: "0xcdbb606b7446c5245aa8b2dcf994fa4b97a9bd02",
+        points: 3325,
+    },
+    {
+        account: "0xa8b5b10b99b9dbba254fda6f322468be9ff63bf2",
+        points: 3314,
+    },
+    {
+        account: "0xaa26a57087c68f58e633207354f575188fb1eca8",
+        points: 3313,
+    },
+    {
+        account: "0x68ad7c296226d72f35b7463af55888a63b773920",
+        points: 3180,
+    },
+    {
+        account: "0x6b98e0deca0786bc2470135e32cd084c0008cfe0",
+        points: 3179,
+    },
+    {
+        account: "0xffa30bb788e941a41cfdf57845bc4863d1ed822a",
+        points: 3100,
+    },
+    {
+        account: "0x15c821c18ff36b24efd0a338989281107ae26f90",
+        points: 3067,
+    },
+    {
+        account: "0x5465bfd6567b5c836409b336287eed52fbd8feba",
+        points: 3000,
+    },
+    {
+        account: "0x1c6ce5ba294e389cad39d86d9d7c7e15cd7789a3",
+        points: 2957,
+    },
+    {
+        account: "0xbb07b59c07b5be89c6cab7e00328505a75b29f76",
+        points: 2938,
+    },
+    {
+        account: "0x37bc3201a09dfa95e36491b6fbeb53d8a7e23694",
+        points: 2620,
+    },
+    {
+        account: "0xf1a8b3f01eaf0421db813e628880206bf8500937",
+        points: 2400,
+    },
+    {
+        account: "0x699cb8789033fd7495eca4e727b444cc5c84a3fd",
+        points: 2290,
+    },
+    {
+        account: "0xbd794810334f5ecac2aeb0e2419a9706d6c5eafd",
+        points: 2260,
+    },
+    {
+        account: "0x7d358d7f581c76c72776e8a85b6b19f851f5229d",
+        points: 2206,
+    },
+    {
+        account: "0x72622e17f6d32f93332a7e907951d797839bf723",
+        points: 2190,
+    },
+    {
+        account: "0xa94cd02da1705bce6bef52f7b80a7bc96701b6e8",
+        points: 2165,
+    },
+    {
+        account: "0x680a6642beb1e3673cf989baf0c5c63f215615f9",
+        points: 2160,
+    },
+    {
+        account: "0x1cf9cb55853a52547abd2ea0ea4eb08abc86c316",
+        points: 2140,
+    },
+    {
+        account: "0xc069b9673e0f46d53dc904d45e58070f064c9d52",
+        points: 1995,
+    },
+    {
+        account: "0x086b287dd577d23e5bf5384974b23b717f2d646c",
+        points: 1957,
+    },
+    {
+        account: "0xf2a013fdf0aa62f9e3e5f16b8fc0211347dec5ef",
+        points: 1896,
+    },
+    {
+        account: "0x661853215aa39cfb17bad23da856564115e33ec8",
+        points: 1840,
+    },
+    {
+        account: "0x5ca5ae5bf0fd44ceaffcd7762341c4bbd58e22b2",
+        points: 1800,
+    },
+    {
+        account: "0x0ad2d4e7352bb5397df5bf9e0006036d2eff3f75",
+        points: 1740,
+    },
+    {
+        account: "0x0411a503430bb4246a3e7c674017bb738921bdf1",
+        points: 1687,
+    },
+    {
+        account: "0xf63f05380dc37d23c2e53c69fa36436d0a29f49a",
+        points: 1664,
+    },
+    {
+        account: "0x7c9556360081e2d80716642feb8d738f36511ea8",
+        points: 1656,
+    },
+    {
+        account: "0x3fd04ac2b504c4a850a51ff6cfd852e17ee5c50c",
+        points: 1618,
+    },
+    {
+        account: "0xbc96df0d1ee1bc3eed3c32844c402f70a4700901",
+        points: 1560,
+    },
+    {
+        account: "0xe63c9c690826027b6edb353828dc7ac33d482ffc",
+        points: 1440,
+    },
+    {
+        account: "0x6ec1d981ead6a894bfc25cdeb2f54f0f3af8667b",
+        points: 1396,
+    },
+    {
+        account: "0xc4fdfc4f53ab906a83748c1b9eab5d588e38d9fc",
+        points: 1365,
+    },
+    {
+        account: "0x0ffe7cb0331e8469f90ac3ae529f35a32767fee6",
+        points: 1355,
+    },
+    {
+        account: "0x644fde90aaa11480a6c6fb782039c498109e9ff9",
+        points: 1350,
+    },
+    {
+        account: "0x304ca5228fbb9d46804c4f379f70f2f56eea3708",
+        points: 1329,
+    },
+    {
+        account: "0xe5d6b6b2d528accd5ece029fd28eb1be68917282",
+        points: 1326,
+    },
+    {
+        account: "0x401cf87491afa1af6f6934b72a0e3dc969ca81d7",
+        points: 1322,
+    },
+    {
+        account: "0xecccd44d7465f6fb0969061291f06a4eb9f389dd",
+        points: 1320,
+    },
+    {
+        account: "0x39b36e79b8f9c4d29f339f1819a00544ab85a839",
+        points: 1260,
+    },
+    {
+        account: "0x4d009e4bef5957150497b5290a39ae3617c02032",
+        points: 1260,
+    },
+    {
+        account: "0x515a2455da8b8016cbf043b2ebdebaaec165857e",
+        points: 1260,
+    },
+    {
+        account: "0x769a42497c3b0cd27d0652759e8b281236c8951d",
+        points: 1260,
+    },
+    {
+        account: "0x7edaf493affb7927eba394886ce9533fb61aa044",
+        points: 1240,
+    },
+    {
+        account: "0x623b32063d9ba455f23016d9e7d24085ca0ebfa0",
+        points: 1170,
+    },
+    {
+        account: "0xfdf5659a645649cd5c8238d396e7a67aa5c32bac",
+        points: 1140,
+    },
+    {
+        account: "0x8b7ed8801a936af0a5b418a0ff89f6236ba2ce2a",
+        points: 1132,
+    },
+    {
+        account: "0xeae2ec3b7eaaf16f45b2be353708d23517e390bd",
+        points: 1120,
+    },
+    {
+        account: "0xe55e5c53e8176c4e51da778b11b33945a64da5a6",
+        points: 1072,
+    },
+    {
+        account: "0xaa0708649f7622a08c40c9bd92192f8b923e19f6",
+        points: 1070,
+    },
+    {
+        account: "0x4ed266c11f8fd74712862ea3545dbf32a6928c60",
+        points: 1035,
+    },
+    {
+        account: "0x62b336a2baacbca5d53e055026c7d0bca36d06bf",
+        points: 1020,
+    },
+    {
+        account: "0x416762c74dae2c8bb9263de10f9793e9d0f9edb8",
+        points: 992,
+    },
+    {
+        account: "0x7a7dbea93690de10fc9b6710e0a4557507f8df93",
+        points: 950,
+    },
+    {
+        account: "0xbc2689bf743608c98401e62c04f818fe5a92ad9e",
+        points: 950,
+    },
+    {
+        account: "0x0c430175632c85c3cd77cd48a29f5195997f4ea8",
+        points: 900,
+    },
+    {
+        account: "0x9e071086e31050d2c807a71f8d5f725367ad3741",
+        points: 857,
+    },
+    {
+        account: "0xd850fd7c0cb51d174b2d72a7b4244a2f2fa69b49",
+        points: 850,
+    },
+    {
+        account: "0x50fe8512f3eae7659d4834eb8983b461a6b33cc2",
+        points: 840,
+    },
+    {
+        account: "0x68ae9dd2aea3120d5a70b293301e8112ba962b60",
+        points: 840,
+    },
+    {
+        account: "0x71ea40213bb0df8d2d149f6f8b0a17c92a0255e0",
+        points: 840,
+    },
+    {
+        account: "0xc36441f7d927d5fe2579324ed33ce6dec47dfd81",
+        points: 840,
+    },
+    {
+        account: "0x82a5b3bd2a9216369537583f63fa576a1d57c7e7",
+        points: 825,
+    },
+    {
+        account: "0xffeffc572fae4b098aaa920345fb445e8ed95918",
+        points: 808,
+    },
+    {
+        account: "0x4ee288cf85e9d44632f6ae837b5bc188cc397123",
+        points: 780,
+    },
+    {
+        account: "0xa0a60e660a6881e379bac093fef08dd8531bdcb5",
+        points: 780,
+    },
+    {
+        account: "0x6223f9f3fc09b9657a6aa7c5456328bdbb81427c",
+        points: 720,
+    },
+    {
+        account: "0x5fde44be105cab14286ed3b67cd73eb3f7ec7af9",
+        points: 700,
+    },
+    {
+        account: "0x18ed63315c999360add443b27e075ef1219e0454",
+        points: 673,
+    },
+    {
+        account: "0xef66ce9478279660ec441a33f2dd346903c55339",
+        points: 670,
+    },
+    {
+        account: "0xa76dfe217da4ec77e3c9ea85d2d9bd6ea86bcb1a",
+        points: 665,
+    },
+    {
+        account: "0xb7059490122145d74cef4ba127181c3cf4bd2908",
+        points: 664,
+    },
+    {
+        account: "0xfa6388e050771ce0fff446f192a8f1b72b734320",
+        points: 664,
+    },
+    {
+        account: "0x205e6cd83305b6021023bad9bc4cc97895733816",
+        points: 660,
+    },
+    {
+        account: "0xbc79248e0fd17ce80cf666d93c7589bbe648b7a7",
+        points: 657,
+    },
+    {
+        account: "0x700b4cd028ee1be0d770d1c42bdecde8cf3ee749",
+        points: 640,
+    },
+    {
+        account: "0x32f39b7e44e04a4c1e72691648798e2fa5250007",
+        points: 639,
+    },
+    {
+        account: "0x2b044a330d9ccabf1ae8184947efa189ec61686b",
+        points: 618,
+    },
+    {
+        account: "0x2bbc29d4647dc9ab2536cabe4abeaa769a6fc352",
+        points: 617,
+    },
+    {
+        account: "0x3c2a5c4aed67d1e3981ed6da3f45e2d3d4bd8307",
+        points: 600,
+    },
+    {
+        account: "0xefa6340d533a6404297c0082f74399294569c348",
+        points: 600,
+    },
+    {
+        account: "0x1b18c3716c8abfe316b70d577d7394b0856b73a6",
+        points: 597,
+    },
+    {
+        account: "0x6190d99e64f0bf8d39f3fdaa79390957e8712531",
+        points: 590,
+    },
+    {
+        account: "0x831e5f68bd9a81b43b79c7f94353b172e3d4d3a1",
+        points: 541,
+    },
+    {
+        account: "0x7d8bd880da0368c2682b259902f73eff192db11b",
+        points: 520,
+    },
+    {
+        account: "0x6e5a0d7148ce04ac106c2931d9520595637a4b10",
+        points: 500,
+    },
+    {
+        account: "0xf16b6acc022af56df1f425e4185238f61c206606",
+        points: 500,
+    },
+    {
+        account: "0x05e6192c9eb9cfb2f88e7b3f8e63822c1efbdcb6",
+        points: 480,
+    },
+    {
+        account: "0x2f2c9f40fba9e9c424540cef9ea88a4b98f9c8a6",
+        points: 480,
+    },
+    {
+        account: "0xe5a86f9d1457b79470fd855a631c36b6e458e119",
+        points: 480,
+    },
+    {
+        account: "0xec602c3f8094dfe1585d933048c8ecd688b568a1",
+        points: 480,
+    },
+    {
+        account: "0xeed31ae6b17f2bec4fa523a75694e817b700af1d",
+        points: 480,
+    },
+    {
+        account: "0x44d07e0df650f5b8f3657a068beb487a9fda1c63",
+        points: 460,
+    },
+    {
+        account: "0xfac19e98ecdd802fc696da24629aa89043104034",
+        points: 430,
+    },
+    {
+        account: "0x11a8b2b81d74dcd78bc954ac290776f4dce18e09",
+        points: 420,
+    },
+    {
+        account: "0xa4cb287daecbac6d01de64ec66436570856c0331",
+        points: 420,
+    },
+    {
+        account: "0xf4cb820c6d4670b6fa36c2dfb76359d036f090d2",
+        points: 420,
+    },
+    {
+        account: "0x7784f56ef362afedcd5ee59c5f17474b233f2742",
+        points: 410,
+    },
+    {
+        account: "0xf30becd486624616ab93254dd93370cca5f35fbb",
+        points: 410,
+    },
+    {
+        account: "0x623316272dc13579f8f66684176a6db4aebc29c6",
+        points: 401,
+    },
+    {
+        account: "0xb93edcb1249f6cb891d23afa055aa9258a5fe8db",
+        points: 390,
+    },
+    {
+        account: "0x902d8d5e4f83037a1b3357c01e165e86fb5674ae",
+        points: 388,
+    },
+    {
+        account: "0xce0a1837d7dc78b90072c21ea004b770e59a9070",
+        points: 384,
+    },
+    {
+        account: "0x56c6c24c5069bdb6239d44cf3a823434e090771c",
+        points: 360,
+    },
+    {
+        account: "0x7c2125fc8442eea22a83db2cbdb33adb30325349",
+        points: 360,
+    },
+    {
+        account: "0xc6d95023f991f7b67605cb23435a4b84fa53017c",
+        points: 350,
+    },
+    {
+        account: "0xe190d4cd89122c21131fdc327ed1f67626cc18c6",
+        points: 350,
+    },
+    {
+        account: "0xa5959416cc1cd7ace0a39923802a2ffc1c9f94a9",
+        points: 340,
+    },
+    {
+        account: "0x368cd9d43832c85eed6e0319f0c5085edf093e6c",
+        points: 337,
+    },
+    {
+        account: "0x090a13c5728c8cfc5f0b8607d23cb9d523420675",
+        points: 315,
+    },
+    {
+        account: "0x7821d4bb8268ec2bfe43fabd565726e1f6dc5c55",
+        points: 303,
+    },
+    {
+        account: "0xff675eef0d7a9f0d1927b17a55dc52a0fdb3e1e6",
+        points: 302,
+    },
+    {
+        account: "0x4a36cae3f2d135436fbb4fbc2472659b2f48b616",
+        points: 300,
+    },
+    {
+        account: "0x5df1d089786fdab2715e26b6ae266b816068e16b",
+        points: 300,
+    },
+    {
+        account: "0x7bb876fd4863369a7c13e65fa9d262b6a91aafb0",
+        points: 300,
+    },
+    {
+        account: "0x7c32005c4aba828b449c9c007100320f7efdc261",
+        points: 300,
+    },
+    {
+        account: "0x8a8ba3297f4af612a3c53d96418e6994e8f2be2f",
+        points: 300,
+    },
+    {
+        account: "0xab21ef96c7acceb04a3da7966470555063c9f964",
+        points: 300,
+    },
+    {
+        account: "0xbf071444c1c9d4c98e944586d49c99c0fde7c652",
+        points: 300,
+    },
+    {
+        account: "0xf3ee236d822e7889cfb91afc3cd88c771035abc0",
+        points: 300,
+    },
+    {
+        account: "0xf4208584a7f3821e5bdb0e135093d261a1737888",
+        points: 300,
+    },
+    {
+        account: "0xfab0bd6fb1c46877b5005f5708c5513f32a875aa",
+        points: 300,
+    },
+    {
+        account: "0x0f30ed39178478860ae2653264cb05b33fbc1235",
+        points: 298,
+    },
+    {
+        account: "0x28f45ccd696370328a412569ad602cb83ae5d17d",
+        points: 250,
+    },
+    {
+        account: "0x177385aa9c89f7a4ee7cfbb3028c763a897f220f",
+        points: 240,
+    },
+    {
+        account: "0x275f1af7b21da358ede5e15335c7edaece5755f7",
+        points: 240,
+    },
+    {
+        account: "0x278a1b2f3d18233fb778dbf88f91b1593acc48a2",
+        points: 240,
+    },
+    {
+        account: "0x3d7c77759674e584951c634b6a9b375feed11f7d",
+        points: 240,
+    },
+    {
+        account: "0x414bb44850b3b428b283235091917cb254305954",
+        points: 240,
+    },
+    {
+        account: "0x9237734e281430749b4584fe400e49dead5b8ad3",
+        points: 240,
+    },
+    {
+        account: "0xa5a5b5308f9bfa7f58500efde34a92e5afb8c29f",
+        points: 240,
+    },
+    {
+        account: "0x1e27b79b34cb0842f361a94809ba309360d6895f",
+        points: 231,
+    },
+    {
+        account: "0x9a41ec0260c34f7b220e19ad5e9d8f30b53e2a10",
+        points: 220,
+    },
+    {
+        account: "0xa494d4c9ced9c6319b77cfcadb3664c2f510aa07",
+        points: 210,
+    },
+    {
+        account: "0x50781f49779dbda588dd31d10cf64b4b4e2f91d6",
+        points: 203,
+    },
+    {
+        account: "0xffd1197bb269d266b0ca54cf5328f77a3fa6098c",
+        points: 202,
+    },
+    {
+        account: "0xe9dce571fe2e59f1aa8a8bff197267c2810e86fc",
+        points: 201,
+    },
+    {
+        account: "0x068c099e4d4eba6a00e2dbf2cf9491054247763f",
+        points: 200,
+    },
+    {
+        account: "0x7cd385a8eebc13b0f52df3f8ef755727ad58a15a",
+        points: 200,
+    },
+    {
+        account: "0xe10f4d87a1f6748b5d1bbab771d443435d4e8661",
+        points: 200,
+    },
+    {
+        account: "0x17dd31e2933cbbd36f0e38509525e4e40a4e555e",
+        points: 180,
+    },
+    {
+        account: "0x30d890aba212a0bec6c9fbb4e426a5c0b9177532",
+        points: 180,
+    },
+    {
+        account: "0x41262a9a9f13c702c0fb2c31c8fcc0559f7e9b44",
+        points: 180,
+    },
+    {
+        account: "0x476824a91e245ff632eef9080a82b9dab2fbb3bc",
+        points: 180,
+    },
+    {
+        account: "0x582fff5f8906d68f39b7f7277b7ee6ed90189455",
+        points: 180,
+    },
+    {
+        account: "0x962d1bd455668a379c7676018f3371fb44a10090",
+        points: 180,
+    },
+    {
+        account: "0x96a0d9ce06612f06a8f0cbea8f675ea700613ad5",
+        points: 180,
+    },
+    {
+        account: "0x9b34f31904c005d565a1a24dd071de63d63a1747",
+        points: 180,
+    },
+    {
+        account: "0xed225909be84c5fe11493219d9e2e1a02dcd5cab",
+        points: 180,
+    },
+    {
+        account: "0xc27e0cd8d90572435b9677b3605f8885d71dbd1a",
+        points: 174,
+    },
+    {
+        account: "0x8a6f208f0e37773354eb090541dcb42ef2b0da14",
+        points: 170,
+    },
+    {
+        account: "0x18ed13b2d2ff6e4cd2f4bccac339a7a254b6abcc",
+        points: 160,
+    },
+    {
+        account: "0x173a0afc13defbe4417320c6785221d372114051",
+        points: 150,
+    },
+    {
+        account: "0x498d2d3e86ef103505a1c8276106098f8a2044ff",
+        points: 150,
+    },
+    {
+        account: "0x4c0131638a9b273e96318d59be5c2ed41971278e",
+        points: 150,
+    },
+    {
+        account: "0x52d0b3350e777ff1ceffccba7dc212275153c900",
+        points: 150,
+    },
+    {
+        account: "0x59d1a7f58e6d0da03e28a98d6c2b62a1138ab91e",
+        points: 150,
+    },
+    {
+        account: "0x94cfedd6a5ee126f5c3e9364f906061a29184841",
+        points: 150,
+    },
+    {
+        account: "0xc06dd80dcb213209e53cae5ec43fc028bb7be714",
+        points: 150,
+    },
+    {
+        account: "0xc90444cf3c2a6d6b621e7701fee6f92f4392f438",
+        points: 150,
+    },
+    {
+        account: "0xbdfb9323608769331df349aba6afc6f38a22d785",
+        points: 134,
+    },
+    {
+        account: "0x4a492735ae3b50ba8ee4e7746ce10f10397d3ef7",
+        points: 120,
+    },
+    {
+        account: "0x55a5b109faa74822b55b9b8ee9fc500c77817bb6",
+        points: 120,
+    },
+    {
+        account: "0x57dc948d6ca1f9fe545a6d2a5b8ec0eacf0ffafb",
+        points: 120,
+    },
+    {
+        account: "0x6584364f9b5e2c1c923e694764b07f52d2d53125",
+        points: 120,
+    },
+    {
+        account: "0x72d1353fcf41e51002e6f63df80d0de8b872ca8a",
+        points: 120,
+    },
+    {
+        account: "0x853f6512afa3488ca907c53d17f05cf1ca221a85",
+        points: 120,
+    },
+    {
+        account: "0x9184a34795bf6345806a94301c85593cdece9fa8",
+        points: 120,
+    },
+    {
+        account: "0xa5ac377f9d8b1d4fc6bd22eaac6b8ba8f79af441",
+        points: 120,
+    },
+    {
+        account: "0xace7a74f0f2650b6af5a0aa0640d84c9e305a44f",
+        points: 120,
+    },
+    {
+        account: "0xb0768fce2454daed6b58c5d21c91d9a34b27a83d",
+        points: 120,
+    },
+    {
+        account: "0xb24b8f5a90bccdc793c20fbc79cc7a3bc734864e",
+        points: 120,
+    },
+    {
+        account: "0xb9c17cd65cf5f52ed13f64b60017f7350c76f655",
+        points: 120,
+    },
+    {
+        account: "0xd0d08ba7d5ef1e634abcb4b86724257be200426a",
+        points: 120,
+    },
+    {
+        account: "0xdb2d6141c3e02a8c0c129b08dc6cbef50b1fe4a9",
+        points: 120,
+    },
+    {
+        account: "0xe1568f57467cdae8c81584eb857a4a9cdee19fd9",
+        points: 120,
+    },
+    {
+        account: "0xea1af5a0ae34927ae3642a71663aa2eda8479f23",
+        points: 120,
+    },
+    {
+        account: "0xece8db6aab37c601363ccdf1d51823716d82e53b",
+        points: 120,
+    },
+    {
+        account: "0xf7b2b4e105d0ce1badca07df55ebba37d111ef76",
+        points: 110,
+    },
+    {
+        account: "0x1b6a9db12044ecc8cee744716fc20d88154762d9",
+        points: 100,
+    },
+    {
+        account: "0x8063807aa11db4f8c4077d0e8fbfc3a0ff4d059c",
+        points: 100,
+    },
+    {
+        account: "0x86ad702337064077e2a6a27a2c7b6a31739ddb95",
+        points: 100,
+    },
+    {
+        account: "0xda411e5a8195b80512511661dc3fdc8e6083d0dc",
+        points: 100,
+    },
+    {
+        account: "0xed5a8ca18cbea3125dbcc652d6c098e18290a1ca",
+        points: 100,
+    },
+    {
+        account: "0x2c238a0fce18d74aca6f28e5da27e53ebf420dcc",
+        points: 67,
+    },
+    {
+        account: "0x3f4f5253a0e17bfff3e8612f700b3ed154ef8829",
+        points: 67,
+    },
+    {
+        account: "0x7b1a3d83c2ce8095639f5018ae6baebdfaf11be2",
+        points: 67,
+    },
+    {
+        account: "0xa9c2dd75825db87be51a7a58ceff0fc7548372b2",
+        points: 67,
+    },
+    {
+        account: "0xf5028d218371203d828f7c8ce67caf653fd165d4",
+        points: 66,
+    },
+    {
+        account: "0xd3b4c6dad28c1a4a700c09885c0f8bc7dc118dc6",
+        points: 64,
+    },
+    {
+        account: "0x450769e861c92a39c35dc7cd3a61c69338c445d6",
+        points: 61,
+    },
+    {
+        account: "0x49d60a8912a53b907a640dfac3e3461989aa7611",
+        points: 61,
+    },
+    {
+        account: "0x0c7ed2659019d6f534f53cf59ab404184f9787f8",
+        points: 60,
+    },
+    {
+        account: "0x16f097efa9f75f68d15c4f6ba0c1414f44baa835",
+        points: 60,
+    },
+    {
+        account: "0x2c02e08770cf54d8cb6f25e82a74393b77ae079d",
+        points: 60,
+    },
+    {
+        account: "0x34a8040d5f177a1cfc69e1c58d1727c866aa9d4d",
+        points: 60,
+    },
+    {
+        account: "0x3d228a7dc106a319c50553576d0ae8fa7e433d7e",
+        points: 60,
+    },
+    {
+        account: "0x45bd8333511aee96f445670de862620a8f8cc54c",
+        points: 60,
+    },
+    {
+        account: "0x4a7d4053b05073d39bce4ae525295489b6e86476",
+        points: 60,
+    },
+    {
+        account: "0x66be7610cd84b2cd2a61384529907a26db1c8970",
+        points: 60,
+    },
+    {
+        account: "0x67a49ce43c61a8edcfc812d7774656edf5febe90",
+        points: 60,
+    },
+    {
+        account: "0x72566bab5d11330ea8f7b5a943b1c6c38394dcc2",
+        points: 60,
+    },
+    {
+        account: "0x7dc1ebed719ba921eb7d97ec9560f06750958e0a",
+        points: 60,
+    },
+    {
+        account: "0x91fcb529b58a1c928a77921753eca66afa338e45",
+        points: 60,
+    },
+    {
+        account: "0x9686fb84f4f577b2e1f071b1491d4036d8a78653",
+        points: 60,
+    },
+    {
+        account: "0x9a1243f2e958c15c7f4ce3d9fade70ca23cee24e",
+        points: 60,
+    },
+    {
+        account: "0xab0d442ba2aa7a3c0ebbe6c75b61734166cd065a",
+        points: 60,
+    },
+    {
+        account: "0xb25ee0636e511870a8bbbf15cf01703f1f87bc05",
+        points: 60,
+    },
+    {
+        account: "0xb2637e9cb886bb54898d33dc023d8363c0bd9c81",
+        points: 60,
+    },
+    {
+        account: "0xbdbbab2ac79e2bab98218fe28c0ca96d2d99fd16",
+        points: 60,
+    },
+    {
+        account: "0xcac223020c16dd46a811d22163b958916a0af0d6",
+        points: 60,
+    },
+    {
+        account: "0xec6776489b6b163d4988ab37f53ddaa6baa5b7b6",
+        points: 60,
+    },
+    {
+        account: "0xfea1b62f6298437eb4fcbdd699a29c62e186ecb4",
+        points: 60,
+    },
+    {
+        account: "0x18c46d2169e60c4db2e6ee3224b23fe66582c1d7",
+        points: 59,
+    },
+    {
+        account: "0xbd16aa91efa3cdeb7deb11084ef8b63c6fcad05b",
+        points: 59,
+    },
+    {
+        account: "0x240fb43f33bdd7d66733e779c22bd3c4dc708155",
+        points: 58,
+    },
+    {
+        account: "0x2338164114f6557f63ffad91f0ef6326f38e9260",
+        points: 50,
+    },
+    {
+        account: "0x24946fce5bc4f76d58d7ecf4bf7e4f8db3c5c580",
+        points: 50,
+    },
+    {
+        account: "0x40cc47fac6d312c20d58ca505a1d2112a13dcc69",
+        points: 50,
+    },
+    {
+        account: "0x4955451db0b5eacc802598ae96189e48b59fb955",
+        points: 50,
+    },
+    {
+        account: "0x6c8edba1e32bbe94ff5bd3e5bbf4d5726cbe0e0e",
+        points: 50,
+    },
+    {
+        account: "0x75d3738286581907335d52ad915244a285f3a607",
+        points: 50,
+    },
+    {
+        account: "0x7cdc97fd73ad26f3e39d4d1fa6c7f02638474dda",
+        points: 50,
+    },
+    {
+        account: "0x852774b1a4ec389f233dc6039bdbe217d39649d9",
+        points: 50,
+    },
+    {
+        account: "0x8ac1592d3132d3adcd96535b3717448252655dd6",
+        points: 50,
+    },
+    {
+        account: "0xa9d155c56b003558bf9918862a263fe8c36c8f08",
+        points: 50,
+    },
+    {
+        account: "0xb352f288906d118ebc51a3a6006cfd34299ac68b",
+        points: 50,
+    },
+    {
+        account: "0xc62bd67c74ceea5cf8f22a8b711be1b86543de8c",
+        points: 50,
+    },
+    {
+        account: "0xcb723190f7ab9a855e122c37e7e9016e07d59d1c",
+        points: 50,
+    },
+    {
+        account: "0xcf89f7bdef5f9aae2c1bbd98be178498373aa2bd",
+        points: 50,
+    },
+    {
+        account: "0xe31d92ad062461fa059c84058daf51e5b7ff866f",
+        points: 50,
+    },
+    {
+        account: "0xf7b11773e7a4f63b3c3a8ed6af4d4fa1dd35e886",
+        points: 50,
+    },
+    {
+        account: "0xf91c5fc32e3a70f0d6146de3f0f725e6275fb591",
+        points: 50,
+    },
+    {
+        account: "0xb881581100ba12d62579d0ac74358fbb73e5d803",
+        points: 33,
+    },
+    {
+        account: "0xdf1fa99ac10f83119d5af6255d6be8efecb5295d",
+        points: 15,
+    },
+    {
+        account: "0x433afab50e269db1211d2172b7407eb22dd3c8d3",
+        points: 13,
+    },
+    {
+        account: "0x2e24c6e355679053ee0afb383923bf87e8321bc5",
+        points: 7,
+    },
+    {
+        account: "0xc132eb2430236ce43e7398cabccd449244586555",
+        points: 6,
+    },
+    {
+        account: "0xc1e07504817d6fed147fb503fd95966d2384ad8f",
+        points: 6,
+    },
+    {
+        account: "0x444be6d36ec63758ab305a4d593923d9d99d0e6d",
+        points: 5,
+    },
+    {
+        account: "0xe3411b8d367551669fb64b3b6281733086ac3757",
+        points: 5,
+    },
+    {
+        account: "0x2b38bc203dd453cb117f9373159cd1759e9417bc",
+        points: 3,
+    },
+    {
+        account: "0xc43937022efc30ad820b5f0f4cd46a9f0caeee7a",
+        points: 2,
+    },
+    {
+        account: "0x1a00ab0caaea6a2ee7f0d7e841d50db1a0b60413",
+        points: 1,
+    },
+];
