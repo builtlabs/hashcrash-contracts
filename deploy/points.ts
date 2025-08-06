@@ -5,7 +5,7 @@ import { Wallet, Contract } from "zksync-ethers";
 import ERC20 from "../artifacts-zk/@openzeppelin/contracts/token/ERC20/ERC20.sol/ERC20.json";
 import GrindPool from "../artifacts-zk/contracts/auxiliary/GrindRewardPool.sol/GrindRewardPool.json";
 import { ethers } from "ethers";
-import { SEASON_FOUR, DIRTY } from "./helpers/season-data";
+import { SEASON_FIVE, DIRTY } from "./helpers/season-data";
 import fs from "fs";
 
 export default async function (runtime: HardhatRuntimeEnvironment) {
@@ -32,15 +32,15 @@ export default async function (runtime: HardhatRuntimeEnvironment) {
     const grind = new Contract("0x1C26DA604221466976bEeB509698152bA8A3A13F", ERC20.abi, wallet);
     const pool = new Contract("0x3889985e91c806b92BF000A374b58dAEdc7D28b5", GrindPool.abi, wallet);
 
-    const totalGrind = ethers.parseEther("111111112");
+    const totalGrind = ethers.parseEther("69000000");
 
-    const seasonId = 4n;
+    const seasonId = 5n;
 
     await tx(grind.approve(pool.target, totalGrind));
     await tx(pool.populateGrind(seasonId, totalGrind));
-    await tx(pool.populatePoints(seasonId, SEASON_FOUR));
+    await tx(pool.populatePoints(seasonId, SEASON_FIVE));
     await tx(pool.openClaim(seasonId));
 
-    const totalPoints = SEASON_FOUR.reduce((acc, season) => acc + season.points, 0);
+    const totalPoints = SEASON_FIVE.reduce((acc, season) => acc + season.points, 0);
     console.log(`Total points for season: ${totalPoints}`);
 }
