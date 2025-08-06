@@ -214,6 +214,10 @@ describe.only("GrindRewardPoolV2", function () {
 
         it("Should start the cumulative from 0", async function () {
             const { sut, wallets } = await loadFixture(fixture);
+        
+            const lottoId = await sut.nextLottoId();
+
+            expect(await sut.getTotalTickets(lottoId)).to.equal(0n);
 
             const tickets = [
                 { account: wallets.deployer.address, amount: 1 },
@@ -223,7 +227,6 @@ describe.only("GrindRewardPoolV2", function () {
 
             await sut.storeTickets(tickets);
 
-            const lottoId = await sut.nextLottoId();
             const stored = await sut.getLottoTickets(lottoId);
             expect(stored.length).to.equal(tickets.length);
 
@@ -391,14 +394,15 @@ describe.only("GrindRewardPoolV2", function () {
 
             const randomNumber = 1n;
 
-            await expect(
-                vrf.fulfillRandomNumber(0n, randomNumber, sut.target)
-            ).to.be.revertedWithCustomError(sut, "LottoNotFound");
+            await expect(vrf.fulfillRandomNumber(0n, randomNumber, sut.target)).to.be.revertedWithCustomError(
+                sut,
+                "LottoNotFound"
+            );
         });
 
         it("Should delete the lotto request", async function () {
             const { sut, vrf, requestId } = await loadFixture(fixtureWithRequest);
-            
+
             const randomNumber = 1n;
 
             await vrf.fulfillRandomNumber(requestId, randomNumber, sut.target);
@@ -409,21 +413,64 @@ describe.only("GrindRewardPoolV2", function () {
         });
 
         it("should find the winner when they are the first ticket", async function () {
-            const { sut, vrf, token } = await loadFixture(fixtureWithRequest);
+            const { sut, vrf, token, tickets, requestId } = await loadFixture(fixtureWithRequest);
 
-            
+            const nextLotto = await sut.requestIdToLotto(requestId);
+
+            const randomNumber = 1n;
+
+            await expect(vrf.fulfillRandomNumber(requestId, randomNumber, sut.target))
+                .to.emit(sut, "LottoDrawCompleted")
+                .withArgs(nextLotto.lottoId, requestId, randomNumber, nextLotto.reward, tickets[0].account);
+
+            expect(await token.balanceOf(tickets[0].account)).to.equal(nextLotto.reward);
         });
 
         it("should find the winner when they are a middle ticket", async function () {
-            const { sut, vrf } = await loadFixture(fixtureWithRequest);
+            const { sut, vrf, token, tickets, requestId } = await loadFixture(fixtureWithRequest);
+
+            const nextLotto = await sut.requestIdToLotto(requestId);
+            const totalTickets = await sut.getTotalTickets(nextLotto.lottoId);
+
+            const randomNumber = totalTickets / 2n - 1n; // Middle ticket
+
+            await expect(vrf.fulfillRandomNumber(requestId, randomNumber, sut.target))
+                .to.emit(sut, "LottoDrawCompleted")
+                .withArgs(nextLotto.lottoId, requestId, randomNumber, nextLotto.reward, tickets[4].account);
+
+            expect(await token.balanceOf(tickets[4].account)).to.equal(nextLotto.reward);
         });
 
         it("should find the winner when they are the last ticket", async function () {
-            const { sut, vrf } = await loadFixture(fixtureWithRequest);
+            const { sut, vrf, token, tickets, requestId } = await loadFixture(fixtureWithRequest);
+
+            const nextLotto = await sut.requestIdToLotto(requestId);
+            const totalTickets = await sut.getTotalTickets(nextLotto.lottoId);
+
+            const randomNumber = totalTickets - 1n; // Last ticket
+
+            await expect(vrf.fulfillRandomNumber(requestId, randomNumber, sut.target))
+                .to.emit(sut, "LottoDrawCompleted")
+                .withArgs(nextLotto.lottoId, requestId, randomNumber, nextLotto.reward, tickets[9].account);
+
+            expect(await token.balanceOf(tickets[9].account)).to.equal(nextLotto.reward);
         });
 
         it("should find the winner from ticket 0 to 9", async function () {
-            const { sut, vrf } = await loadFixture(fixtureWithRequest);
+            for (let i = 0; i < 100; i++) {
+                const { sut, vrf, token, tickets, requestId } = await loadFixture(fixtureWithRequest);
+
+                const nextLotto = await sut.requestIdToLotto(requestId);
+
+                const randomNumber = BigInt(i);
+                const expectedWinner = tickets[Math.floor(i / 10)].account;
+
+                await expect(vrf.fulfillRandomNumber(requestId, randomNumber, sut.target))
+                    .to.emit(sut, "LottoDrawCompleted")
+                    .withArgs(nextLotto.lottoId, requestId, randomNumber, nextLotto.reward, expectedWinner);
+
+                expect(await token.balanceOf(expectedWinner)).to.equal(nextLotto.reward);
+            }
         });
     });
 });

@@ -101,6 +101,12 @@ contract GrindRewardPoolV2 is IVRFSystemCallback {
         return _nextLottoId;
     }
 
+    /// @notice Retrieves the total number of tickets for a specific lotto round.
+    /// @param lottoId_ The ID of the lotto round to retrieve the total tickets for
+    function getTotalTickets(uint256 lottoId_) external view returns (uint256) {
+        return _totalTickets(_lottoRounds[lottoId_]);
+    }
+
     /// @notice Retrieves the lotto tickets for a specific lotto round.
     /// @param lottoId_ The ID of the lotto round to retrieve tickets for
     function getLottoTickets(uint256 lottoId_) external view returns (LottoTicket[] memory) {
