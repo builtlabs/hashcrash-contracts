@@ -18,6 +18,7 @@
     "@matterlabs/hardhat-zksync": "^1.5.0",
     "@nomicfoundation/hardhat-ethers": "^3.0.8",
     "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "@openzeppelin/hardhat-upgrades": "^3.9.1",
     "ethers": "^6.13.5",
     "hardhat": "^2.23.0",
     "prettier": "^3.5.3",
@@ -28,6 +29,7 @@
   },
   "dependencies": {
     "@matterlabs/zksync-contracts": "1.0.0-beta.4",
-    "@openzeppelin/contracts": "^5.3.0"
+    "@openzeppelin/contracts": "^5.4.0",
+    "@openzeppelin/contracts-upgradeable": "^5.4.0"
   }
 }
