@@ -1,0 +1,249 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.24;
+
+import { BPS } from "../lib/BPS.sol";
+import { TokenReceiver } from "../lib/TokenReceiver.sol";
+import { ILiquidityPool } from "../interfaces/ILiquidityPool.sol";
+
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
+
+contract CrossAppLiquidity is Ownable, TokenReceiver, ILiquidityPool {
+    address immutable _TREASURY;
+
+    // #######################################################################################
+
+    error AppNotEnabled(address app);
+    error TokenNotEnabled(address token);
+
+    error HoldNotFound();
+    error InsufficientShares();
+    error MaxExposureExceeded();
+    error InsufficientLiquidity();
+    error InsufficientShareValue();
+
+    event AppEnabled(address indexed app, bool enabled);
+    event TokenSettingsUpdated(address indexed token, TokenSettings settings);
+    event TokenMinShareValueUpdated(address indexed token, uint256 minShareValue);
+
+    event LiquidityAdded(address indexed user, uint256 amount, uint256 shares);
+    event LiquidityRemoved(address indexed user, uint256 tokenDelta, uint256 shareDelta);
+
+    event LiquidityHoldPlaced(address indexed app, address indexed token, uint256 amount, uint256 requestId);
+    event LiquidityHoldResolved(
+        address indexed app,
+        address indexed token,
+        uint256 requestId,
+        uint256 incoming,
+        uint256 outgoing,
+        uint256 fee
+    );
+
+    // #######################################################################################
+
+    struct Token {
+        uint256 onHold;
+        uint256 totalShares;
+        uint256 nextRequestId;
+        mapping(uint256 => uint256) requests;
+        mapping(address => uint256) userShares;
+    }
+
+    struct TokenSettings {
+        bool enabled;
+        uint32 feeBps;
+        uint32 bufferBps;
+        uint32 maxExposureBps;
+        uint256 minShareValue;
+    }
+
+    // #######################################################################################
+
+    mapping(address => bool) private _enabledApps;
+
+    mapping(address => Token) private _tokens;
+    mapping(address => TokenSettings) private _tokenSettings;
+
+    // #######################################################################################
+
+    modifier onlyApp() {
+        if (!_enabledApps[msg.sender]) revert AppNotEnabled(msg.sender);
+        _;
+    }
+
+    modifier onlyToken(address token_) {
+        if (!_tokenSettings[token_].enabled) revert TokenNotEnabled(token_);
+        _;
+    }
+
+    // #######################################################################################
+
+    constructor(address initialOwner_, address weth_, address treasury_) Ownable(initialOwner_) TokenReceiver(weth_) {
+        _TREASURY = treasury_;
+    }
+
+    // #######################################################################################
+
+    function setAppEnabled(address app_, bool enabled_) external onlyOwner {
+        _enabledApps[app_] = enabled_;
+        emit AppEnabled(app_, enabled_);
+    }
+
+    function setTokenSettings(address token_, TokenSettings calldata settings_) external onlyOwner {
+        _tokenSettings[token_] = settings_;
+        emit TokenSettingsUpdated(token_, settings_);
+    }
+
+    // #######################################################################################
+
+    function deposit(address token_, uint256 amount_) external payable onlyToken(token_) {
+        // Wrap any native ether, standardize behavior between weth and other erc20's.
+        amount_ = _receiveValue(token_, amount_);
+
+        // Get current balance and user shares
+        uint256 currentBalance = _getBalance(token_);
+        uint256 totalShares = _tokens[token_].totalShares;
+        uint256 userShares = _tokens[token_].userShares[msg.sender];
+
+        // Calculate new shares to mint
+        unchecked {
+            uint256 newShares = totalShares == 0 ? amount_ : (amount_ * totalShares) / (currentBalance - amount_);
+            totalShares += newShares;
+            userShares += newShares;
+        }
+
+        // Ensure sufficient share value
+        if (_shareValue(userShares, currentBalance, totalShares) < _tokenSettings[token_].minShareValue) {
+            revert InsufficientShareValue();
+        }
+
+        // Commit changes
+        _tokens[token_].totalShares = totalShares;
+        _tokens[token_].userShares[msg.sender] = userShares;
+
+        emit LiquidityAdded(msg.sender, amount_, totalShares);
+    }
+
+    function withdraw(address token_, uint256 shareAmount_) external onlyToken(token_) {
+        // Cache current state
+        uint256 currentBalance = _getBalance(token_);
+        uint256 totalShares = _tokens[token_].totalShares;
+        uint256 userShares = _tokens[token_].userShares[msg.sender];
+
+        // Ensure user has enough shares
+        if (userShares < shareAmount_) revert InsufficientShares();
+
+        // Offset current state by withdrawn amounts
+        uint256 withdrawAmount = _shareValue(shareAmount_, currentBalance, totalShares);
+
+        unchecked {
+            userShares -= shareAmount_;
+            totalShares -= shareAmount_;
+            currentBalance -= withdrawAmount;
+        }
+
+        // Ensure sufficient share value after withdrawal
+        if (
+            userShares > 0 &&
+            _shareValue(userShares, currentBalance, totalShares) < _tokenSettings[token_].minShareValue
+        ) {
+            revert InsufficientShareValue();
+        }
+
+        // Commit changes
+        _tokens[token_].userShares[msg.sender] = userShares;
+        _tokens[token_].totalShares = totalShares;
+
+        _sendValue(token_, msg.sender, withdrawAmount);
+
+        emit LiquidityRemoved(msg.sender, withdrawAmount, totalShares);
+    }
+
+    function requestLiquidity(
+        address token_,
+        uint256 amount_
+    ) external onlyApp onlyToken(token_) returns (uint256 requestId, uint256 amount) {
+        uint256 availableBalance = _getAvailableBalance(token_);
+        uint256 onHold = _tokens[token_].onHold;
+        uint256 totalBalance = _addUnchecked(availableBalance, onHold);
+
+        // Ensure amount is within limits
+        uint256 cacheA = BPS.calculate(totalBalance, _tokenSettings[token_].maxExposureBps);
+        if (amount_ == 0) {
+            amount_ = cacheA;
+        } else if (amount_ > cacheA) {
+            revert MaxExposureExceeded();
+        }
+
+        cacheA = BPS.calculate(totalBalance, _tokenSettings[token_].bufferBps);
+        if (availableBalance < amount_ || _subUnchecked(availableBalance, amount_) < cacheA) {
+            revert InsufficientLiquidity();
+        }
+
+        // Place hold
+        uint256 nextRequestId = _tokens[token_].nextRequestId;
+
+        _tokens[token_].requests[nextRequestId] = amount_;
+        unchecked {
+            _tokens[token_].onHold = onHold + amount_;
+            _tokens[token_].nextRequestId = nextRequestId + 1;
+        }
+
+        _sendValue(token_, msg.sender, amount_);
+
+        emit LiquidityHoldPlaced(msg.sender, token_, amount_, nextRequestId);
+
+        return (nextRequestId, amount_);
+    }
+
+    function settleLiquidityRequest(
+        uint256 requestId_,
+        address token_,
+        uint256 incoming_,
+        uint256 outgoing_
+    ) external onlyApp onlyToken(token_) {
+        uint256 hold = _tokens[token_].requests[requestId_];
+        delete _tokens[token_].requests[requestId_];
+
+        if (hold == 0) revert HoldNotFound();
+
+        uint256 fee = BPS.calculate(incoming_, _tokenSettings[token_].feeBps);
+        _sendValue(token_, _TREASURY, fee);
+
+        unchecked {
+            _tokens[token_].onHold -= hold;
+        }
+
+        emit LiquidityHoldResolved(msg.sender, token_, requestId_, incoming_, outgoing_, fee);
+    }
+
+    // #######################################################################################
+
+    function _getBalance(address token_) private view returns (uint256) {
+        uint256 available = _getAvailableBalance(token_);
+        return _addUnchecked(available, _tokens[token_].onHold);
+    }
+
+    function _getAvailableBalance(address token_) private view returns (uint256) {
+        return IERC20(token_).balanceOf(address(this));
+    }
+
+    function _shareValue(uint256 userShares_, uint256 balance_, uint256 totalShares_) private pure returns (uint256) {
+        if (totalShares_ == 0) return 0;
+        unchecked {
+            return (userShares_ * balance_) / totalShares_;
+        }
+    }
+
+    function _addUnchecked(uint256 a, uint256 b) private pure returns (uint256) {
+        unchecked {
+            return a + b;
+        }
+    }
+
+    function _subUnchecked(uint256 a, uint256 b) private pure returns (uint256) {
+        unchecked {
+            return a - b;
+        }
+    }
+}
