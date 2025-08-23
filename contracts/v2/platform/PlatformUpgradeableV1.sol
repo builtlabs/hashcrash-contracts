@@ -179,7 +179,7 @@ contract PlatformUpgradeableV1 is
     }
 
     function _splitFee(uint256 amount_, uint256 min_) private pure returns (uint256, uint256) {
-        uint256 fee = BPS.calculate(amount_, PLATFORM_FEE);
+        uint256 fee = BPS.reverse(amount_, PLATFORM_FEE);
 
         if (fee < min_) {
             fee = min_;

@@ -23,6 +23,7 @@ contract CrashUpgradeableV1 is Initializable, UUPSUpgradeable, OwnableUpgradeabl
     error BetNotFound();
     error BetNotYours();
     error BetIsCancelled();
+    error BetExpired();
 
     error RoundIsFull();
     error RoundInProgress();
@@ -49,7 +50,6 @@ contract CrashUpgradeableV1 is Initializable, UUPSUpgradeable, OwnableUpgradeabl
 
     struct BetPool {
         uint8 count;
-        uint248 cancelledBitmap;
         mapping(uint8 => Bet) bets;
     }
 
@@ -60,6 +60,7 @@ contract CrashUpgradeableV1 is Initializable, UUPSUpgradeable, OwnableUpgradeabl
         uint8 globalIndex;
         uint8 localIndex;
         uint8 uiChannel;
+        bool cancelled;
     }
 
     // #######################################################################################
@@ -150,11 +151,12 @@ contract CrashUpgradeableV1 is Initializable, UUPSUpgradeable, OwnableUpgradeabl
     function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 
     function _processBet(address placedBy_, address token_, uint256 amount_, bytes calldata data_) internal override {
-        (uint8 cashoutIndex, uint8 betChannel) = abi.decode(data_, (uint8, uint8));
+        (uint8 cashoutIndex, uint8 betChannel, uint64 hashIndex) = abi.decode(data_, (uint8, uint8, uint64));
 
         // Ensure bet is valid
         if (_guaranteeStarted() <= block.number) revert RoundInProgress();
         if (_getLength() <= cashoutIndex) revert InvalidValue(cashoutIndex);
+        if (hashIndex != _hashIndex) revert BetExpired();
 
         // Reduce the round liquidity by the users max win
         uint256 liquidity = _remainingLiquidity(token_);
