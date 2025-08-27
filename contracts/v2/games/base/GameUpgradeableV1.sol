@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+
 import { IGame } from "../../interfaces/IGame.sol";
 import { ILiquidityPool } from "../../interfaces/ILiquidityPool.sol";
 
@@ -24,6 +27,21 @@ abstract contract GameUpgradeableV1 is IGame {
     modifier onlyRandomness() {
         if (msg.sender != RANDOMNESS) revert CallerNotRandomness();
         _;
+    }
+
+    // #######################################################################################
+
+    struct GameStorage {
+        mapping(uint256 => uint256) borrowed;
+    }
+
+    // keccak256("hashcrash.storage.GameUpgradeable")
+    bytes32 private constant GameStorageLocation = 0xe1473c9651f1082defdb29145c3601550f958fb43a1a0757448f0d1aab86440d;
+
+    function _getGameStorage() private pure returns (GameStorage storage $) {
+        assembly {
+            $.slot := GameStorageLocation
+        }
     }
 
     // #######################################################################################
@@ -53,7 +71,8 @@ abstract contract GameUpgradeableV1 is IGame {
     // #######################################################################################
 
     function _requestLiquidity(address token_, uint256 amount_) internal returns (uint256 requestId, uint256 amount) {
-        return LIQUIDITY.requestLiquidity(token_, amount_);
+        (requestId, amount) = LIQUIDITY.requestLiquidity(token_, amount_);
+        _setBorrowed(requestId, amount);
     }
 
     function _settleLiquidityRequest(
@@ -62,6 +81,21 @@ abstract contract GameUpgradeableV1 is IGame {
         uint256 incoming_,
         uint256 outgoing_
     ) internal {
+        _sendValue(token_, address(LIQUIDITY), incoming_ + _getBorrowed(requestId_) - outgoing_);
         LIQUIDITY.settleLiquidityRequest(requestId_, token_, incoming_, outgoing_);
+    }
+
+    function _sendValue(address token_, address to_, uint256 amount_) internal {
+        SafeERC20.safeTransfer(IERC20(token_), to_, amount_);
+    }
+
+    // #######################################################################################
+
+    function _getBorrowed(uint256 requestId_) private view returns (uint256) {
+        return _getGameStorage().borrowed[requestId_];
+    }
+
+    function _setBorrowed(uint256 requestId_, uint256 amount_) private {
+        _getGameStorage().borrowed[requestId_] = amount_;
     }
 }

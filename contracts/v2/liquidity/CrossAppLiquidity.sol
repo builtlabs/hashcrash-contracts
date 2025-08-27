@@ -207,8 +207,9 @@ contract CrossAppLiquidity is Ownable, TokenReceiver, ILiquidityPool {
 
         if (hold == 0) revert HoldNotFound();
 
+        uint256 fee = 0;
         if (incoming_ > 0) {
-            uint256 fee = BPS.calculate(incoming_, _tokenSettings[token_].feeBps);
+            fee = BPS.calculate(incoming_, _tokenSettings[token_].feeBps);
             _sendValue(token_, _TREASURY, fee);
         }
 
