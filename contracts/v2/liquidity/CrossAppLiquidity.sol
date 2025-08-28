@@ -35,10 +35,9 @@ contract CrossAppLiquidity is Ownable, TokenReceiver, IPaymaster, ILiquidityPool
 
     event AppEnabled(address indexed app, bool enabled);
     event TokenSettingsUpdated(address indexed token, TokenSettings settings);
-    event TokenMinShareValueUpdated(address indexed token, uint256 minShareValue);
 
-    event LiquidityAdded(address indexed user, uint256 amount, uint256 shares);
-    event LiquidityRemoved(address indexed user, uint256 tokenDelta, uint256 shareDelta);
+    event LiquidityAdded(address indexed user, address indexed token, uint256 amount, uint256 shares);
+    event LiquidityRemoved(address indexed user, address indexed token, uint256 tokenDelta, uint256 shareDelta);
 
     event LiquidityHoldPlaced(address indexed app, address indexed token, uint256 amount, uint256 requestId);
     event LiquidityHoldResolved(
@@ -159,7 +158,7 @@ contract CrossAppLiquidity is Ownable, TokenReceiver, IPaymaster, ILiquidityPool
         _tokens[token_].totalShares = totalShares;
         _tokens[token_].userShares[msg.sender] = userShares;
 
-        emit LiquidityAdded(msg.sender, amount_, totalShares);
+        emit LiquidityAdded(msg.sender, token_, amount_, totalShares);
     }
 
     function withdraw(address token_, uint256 shareAmount_) external onlyToken(token_) {
@@ -194,7 +193,7 @@ contract CrossAppLiquidity is Ownable, TokenReceiver, IPaymaster, ILiquidityPool
 
         _sendValue(token_, msg.sender, withdrawAmount);
 
-        emit LiquidityRemoved(msg.sender, withdrawAmount, totalShares);
+        emit LiquidityRemoved(msg.sender, token_, withdrawAmount, totalShares);
     }
 
     function requestLiquidity(
@@ -293,6 +292,10 @@ contract CrossAppLiquidity is Ownable, TokenReceiver, IPaymaster, ILiquidityPool
         uint256 _maxRefundedGas
     ) external payable onlyBootloader {
         if (_context.length > 0) {
+            // TODO: This exchange rate cannot be done like this, as a user can provide whatever they like, this is for testing purposes only
+            // Either:
+            // A) Write to chain every x minutes
+            // B) Sign the value
             (address token, uint256 exchangeRateNumerator) = abi.decode(_context, (address, uint256));
 
             uint256 minWeiSpent = (_transaction.gasLimit - _maxRefundedGas) * _transaction.maxFeePerGas;

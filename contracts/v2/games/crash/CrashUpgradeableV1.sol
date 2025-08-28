@@ -110,9 +110,9 @@ contract CrashUpgradeableV1 is
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor(
         address platform_,
-        address treasury_,
-        address randomness_
-    ) GameUpgradeableV1(platform_, treasury_, randomness_) {
+        address randomness_,
+        address liquidity_
+    ) GameUpgradeableV1(platform_, randomness_, liquidity_) {
         _disableInitializers();
     }
 
