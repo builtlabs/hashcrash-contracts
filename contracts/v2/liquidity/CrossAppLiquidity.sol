@@ -8,10 +8,21 @@ import { ILiquidityPool } from "../interfaces/ILiquidityPool.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 
-contract CrossAppLiquidity is Ownable, TokenReceiver, ILiquidityPool {
-    address immutable _TREASURY;
+import { IPaymasterFlow } from "@matterlabs/zksync-contracts/contracts/l2-contracts/interfaces/IPaymasterFlow.sol";
+import { IPaymaster, ExecutionResult, PAYMASTER_VALIDATION_SUCCESS_MAGIC } from "@matterlabs/zksync-contracts/contracts/l2-contracts/interfaces/IPaymaster.sol";
+import { BOOTLOADER_ADDRESS, Transaction } from "@matterlabs/zksync-contracts/contracts/l2-contracts/L2ContractHelper.sol";
+
+contract CrossAppLiquidity is Ownable, TokenReceiver, IPaymaster, ILiquidityPool {
+    uint256 private constant _EXCHANGE_RATE_DENOMINATOR = 1e16;
+
+    address immutable _REWARD_FUND;
+    address immutable _GAS_FUND;
 
     // #######################################################################################
+
+    error NotBootloader();
+    error InvalidPaymasterInput();
+    error FailedToTransferEther();
 
     error AppNotEnabled(address app);
     error TokenNotEnabled(address token);
@@ -37,6 +48,14 @@ contract CrossAppLiquidity is Ownable, TokenReceiver, ILiquidityPool {
         uint256 incoming,
         uint256 outgoing,
         uint256 fee
+    );
+
+    event GasSponsored(
+        address indexed app,
+        address indexed sender,
+        uint256 ethAmount,
+        address token,
+        uint256 tokenAmount
     );
 
     // #######################################################################################
@@ -71,6 +90,11 @@ contract CrossAppLiquidity is Ownable, TokenReceiver, ILiquidityPool {
         _;
     }
 
+    modifier onlyBootloader() {
+        if (msg.sender != BOOTLOADER_ADDRESS) revert NotBootloader();
+        _;
+    }
+
     modifier onlyToken(address token_) {
         if (!_tokenSettings[token_].enabled) revert TokenNotEnabled(token_);
         _;
@@ -78,8 +102,14 @@ contract CrossAppLiquidity is Ownable, TokenReceiver, ILiquidityPool {
 
     // #######################################################################################
 
-    constructor(address initialOwner_, address weth_, address treasury_) Ownable(initialOwner_) TokenReceiver(weth_) {
-        _TREASURY = treasury_;
+    constructor(
+        address owner_,
+        address weth_,
+        address gasFund_,
+        address rewardFund_
+    ) Ownable(owner_) TokenReceiver(weth_) {
+        _GAS_FUND = gasFund_;
+        _REWARD_FUND = rewardFund_;
     }
 
     // #######################################################################################
@@ -92,6 +122,14 @@ contract CrossAppLiquidity is Ownable, TokenReceiver, ILiquidityPool {
     function setTokenSettings(address token_, TokenSettings calldata settings_) external onlyOwner {
         _tokenSettings[token_] = settings_;
         emit TokenSettingsUpdated(token_, settings_);
+    }
+
+    function withdrawGas(uint256 _amount) external onlyOwner {
+        _sendEther(payable(_GAS_FUND), _amount);
+    }
+
+    function withdrawAllGas() external onlyOwner {
+        _sendEther(payable(_GAS_FUND), address(this).balance);
     }
 
     // #######################################################################################
@@ -165,18 +203,18 @@ contract CrossAppLiquidity is Ownable, TokenReceiver, ILiquidityPool {
     ) external onlyApp onlyToken(token_) returns (uint256 requestId, uint256 amount) {
         uint256 availableBalance = _getAvailableBalance(token_);
         uint256 onHold = _tokens[token_].onHold;
-        uint256 totalBalance = _addUnchecked(availableBalance, onHold);
+        uint256 totalBalance = availableBalance + onHold;
 
         // Ensure amount is within limits
-        uint256 cacheA = BPS.calculate(totalBalance, _tokenSettings[token_].maxExposureBps);
+        uint256 limit = BPS.calculate(totalBalance, _tokenSettings[token_].maxExposureBps);
         if (amount_ == 0) {
-            amount_ = cacheA;
-        } else if (amount_ > cacheA) {
+            amount_ = limit;
+        } else if (amount_ > limit) {
             revert MaxExposureExceeded();
         }
 
-        cacheA = BPS.calculate(totalBalance, _tokenSettings[token_].bufferBps);
-        if (availableBalance < amount_ || _subUnchecked(availableBalance, amount_) < cacheA) {
+        limit = BPS.calculate(totalBalance, _tokenSettings[token_].bufferBps);
+        if (availableBalance < amount_ || availableBalance - amount_ < limit) {
             revert InsufficientLiquidity();
         }
 
@@ -210,7 +248,7 @@ contract CrossAppLiquidity is Ownable, TokenReceiver, ILiquidityPool {
         uint256 fee = 0;
         if (incoming_ > 0) {
             fee = BPS.calculate(incoming_, _tokenSettings[token_].feeBps);
-            _sendValue(token_, _TREASURY, fee);
+            _sendValue(token_, _GAS_FUND, fee);
         }
 
         unchecked {
@@ -222,9 +260,71 @@ contract CrossAppLiquidity is Ownable, TokenReceiver, ILiquidityPool {
 
     // #######################################################################################
 
+    /// @inheritdoc IPaymaster
+    function validateAndPayForPaymasterTransaction(
+        bytes32, // _txHash
+        bytes32, // _suggestedSignedHash
+        Transaction calldata _transaction
+    ) external payable onlyBootloader returns (bytes4 magic, bytes memory context) {
+        magic = PAYMASTER_VALIDATION_SUCCESS_MAGIC;
+        context = new bytes(0);
+
+        if (
+            _transaction.paymasterInput.length < 4 ||
+            bytes4(_transaction.paymasterInput[0:4]) != IPaymasterFlow.general.selector
+        ) {
+            revert InvalidPaymasterInput();
+        }
+
+        if (_enabledApps[_toAddress(_transaction.to)] && _transaction.paymasterInput.length > 4) {
+            context = _transaction.paymasterInput[4:];
+        }
+
+        _sendEther(payable(BOOTLOADER_ADDRESS), _transaction.gasLimit * _transaction.maxFeePerGas);
+    }
+
+    /// @inheritdoc IPaymaster
+    function postTransaction(
+        bytes calldata _context,
+        Transaction calldata _transaction,
+        bytes32, // _txHash
+        bytes32, // _suggestedSignedHash
+        ExecutionResult, // _txResult
+        uint256 _maxRefundedGas
+    ) external payable onlyBootloader {
+        if (_context.length > 0) {
+            (address token, uint256 exchangeRateNumerator) = abi.decode(_context, (address, uint256));
+
+            uint256 minWeiSpent = (_transaction.gasLimit - _maxRefundedGas) * _transaction.maxFeePerGas;
+            uint256 minTokenSpent = (minWeiSpent * exchangeRateNumerator) / _EXCHANGE_RATE_DENOMINATOR;
+
+            _sendValue(token, _GAS_FUND, minTokenSpent);
+            emit GasSponsored(
+                _toAddress(_transaction.to),
+                _toAddress(_transaction.from),
+                minWeiSpent,
+                token,
+                minTokenSpent
+            );
+        }
+    }
+
+    // #######################################################################################
+
+    receive() external payable {}
+
+    // #######################################################################################
+
+    function _sendEther(address payable _to, uint256 _amount) private {
+        (bool success, ) = _to.call{ value: _amount }("");
+        if (!success) revert FailedToTransferEther();
+    }
+
     function _getBalance(address token_) private view returns (uint256) {
         uint256 available = _getAvailableBalance(token_);
-        return _addUnchecked(available, _tokens[token_].onHold);
+        unchecked {
+            return available + _tokens[token_].onHold;
+        }
     }
 
     function _getAvailableBalance(address token_) private view returns (uint256) {
@@ -238,15 +338,7 @@ contract CrossAppLiquidity is Ownable, TokenReceiver, ILiquidityPool {
         }
     }
 
-    function _addUnchecked(uint256 a, uint256 b) private pure returns (uint256) {
-        unchecked {
-            return a + b;
-        }
-    }
-
-    function _subUnchecked(uint256 a, uint256 b) private pure returns (uint256) {
-        unchecked {
-            return a - b;
-        }
+    function _toAddress(uint256 value_) private pure returns (address) {
+        return address(uint160(value_));
     }
 }
