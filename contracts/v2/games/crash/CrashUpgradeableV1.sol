@@ -259,23 +259,8 @@ contract CrashUpgradeableV1 is
         if (currentCashout <= cashout_) revert AlreadyCashedOut();
 
         // Verify the signature
-        if (
-            _recoverSigner(
-                signature_,
-                keccak256(
-                    abi.encode(
-                        _CASHOUT_HASH,
-                        msg.sender,
-                        _hashIndex,
-                        bet.localIndex,
-                        bet.globalIndex,
-                        currentCashout,
-                        cashout_,
-                        signature_.deadline
-                    )
-                )
-            ) != RANDOMNESS
-        ) revert InvalidSignature();
+        if (_recoverSigner(signature_, bet.localIndex, bet.globalIndex, currentCashout, cashout_) != RANDOMNESS)
+            revert InvalidSignature();
 
         bet.cashoutIndex = cashout_;
 
@@ -479,9 +464,34 @@ contract CrashUpgradeableV1 is
         if (bet_.cancelled) revert BetIsCancelled();
     }
 
-    function _recoverSigner(Signature calldata _signature, bytes32 _digest) private view returns (address) {
-        if (block.timestamp > _signature.deadline) revert ExpiredSignature();
-        return ECDSA.recover(_hashTypedDataV4(_digest), _signature.v, _signature.r, _signature.s);
+    function _recoverSigner(
+        Signature calldata signature_,
+        uint8 localIndex_,
+        uint8 globalIndex_,
+        uint8 current_,
+        uint8 future_
+    ) private view returns (address) {
+        if (block.timestamp > signature_.deadline) revert ExpiredSignature();
+        return
+            ECDSA.recover(
+                _hashTypedDataV4(
+                    keccak256(
+                        abi.encode(
+                            _CASHOUT_HASH,
+                            msg.sender,
+                            _hashIndex,
+                            localIndex_,
+                            globalIndex_,
+                            current_,
+                            future_,
+                            signature_.deadline
+                        )
+                    )
+                ),
+                signature_.v,
+                signature_.r,
+                signature_.s
+            );
     }
 
     function _getBetPools(address[] calldata tokens_) private view returns (BetPoolOutput[] memory pools_) {

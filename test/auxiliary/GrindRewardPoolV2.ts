@@ -5,7 +5,7 @@ import { ethers } from "hardhat";
 const oneEther = ethers.parseEther("1");
 const tokenBalance = ethers.parseEther("10000");
 
-describe.only("GrindRewardPoolV2", function () {
+describe("GrindRewardPoolV2", function () {
     async function fixture() {
         const [deployer, alice, bob] = await ethers.getSigners();
 

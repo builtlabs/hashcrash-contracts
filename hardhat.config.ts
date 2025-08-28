@@ -2,9 +2,7 @@ import { HardhatUserConfig, vars } from "hardhat/config";
 import "@nomicfoundation/hardhat-toolbox";
 import "@nomicfoundation/hardhat-ethers";
 import "@matterlabs/hardhat-zksync";
-import "@openzeppelin/hardhat-upgrades";
 
-const COINMARKETCAP_API_KEY = vars.get("COINMARKETCAP_API_KEY");
 const ABSSCAN_API_KEY = vars.get("ABSSCAN_API_KEY");
 
 const config: HardhatUserConfig = {
@@ -29,19 +27,7 @@ const config: HardhatUserConfig = {
             },
         },
     },
-    defaultNetwork: "hardhat",
-    gasReporter: {
-        coinmarketcap: `${COINMARKETCAP_API_KEY}`,
-        gasPriceApi: `https://api.basescan.org/api?module=proxy&action=eth_gasPrice`,
-        enabled: true,
-        currency: "USD",
-    },
     networks: {
-        hardhat: {
-            accounts: {
-                count: 100,
-            },
-        },
         abstractTestnet: {
             url: "https://api.testnet.abs.xyz",
             ethNetwork: "sepolia",
@@ -78,9 +64,6 @@ const config: HardhatUserConfig = {
                 },
             },
         ],
-    },
-    mocha: {
-        timeout: 1200000, // 20 minutes
     },
 };
 
