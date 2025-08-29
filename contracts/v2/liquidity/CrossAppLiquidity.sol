@@ -33,7 +33,7 @@ contract CrossAppLiquidity is Ownable, TokenReceiver, IPaymaster, ILiquidityPool
     error InsufficientLiquidity();
     error InsufficientShareValue();
 
-    event AppEnabled(address indexed app, bool enabled);
+    event AccessLevelUpdated(address indexed app, uint256 level);
     event TokenSettingsUpdated(address indexed token, TokenSettings settings);
 
     event LiquidityAdded(address indexed user, address indexed token, uint256 amount, uint256 shares);
@@ -77,7 +77,7 @@ contract CrossAppLiquidity is Ownable, TokenReceiver, IPaymaster, ILiquidityPool
 
     // #######################################################################################
 
-    mapping(address => bool) private _enabledApps;
+    mapping(address => uint256) private _accessLevel;
 
     mapping(address => Token) private _tokens;
     mapping(address => TokenSettings) private _tokenSettings;
@@ -85,7 +85,7 @@ contract CrossAppLiquidity is Ownable, TokenReceiver, IPaymaster, ILiquidityPool
     // #######################################################################################
 
     modifier onlyApp() {
-        if (!_enabledApps[msg.sender]) revert AppNotEnabled(msg.sender);
+        if (_accessLevel[msg.sender] < 2) revert AppNotEnabled(msg.sender);
         _;
     }
 
@@ -109,13 +109,14 @@ contract CrossAppLiquidity is Ownable, TokenReceiver, IPaymaster, ILiquidityPool
     ) Ownable(owner_) TokenReceiver(weth_) {
         _GAS_FUND = gasFund_;
         _REWARD_FUND = rewardFund_;
+
+        _setAccessLevel(address(this), 1);
     }
 
     // #######################################################################################
 
-    function setAppEnabled(address app_, bool enabled_) external onlyOwner {
-        _enabledApps[app_] = enabled_;
-        emit AppEnabled(app_, enabled_);
+    function setAccessLevel(address app_, uint256 level_) external onlyOwner {
+        _setAccessLevel(app_, level_);
     }
 
     function setTokenSettings(address token_, TokenSettings calldata settings_) external onlyOwner {
@@ -275,7 +276,7 @@ contract CrossAppLiquidity is Ownable, TokenReceiver, IPaymaster, ILiquidityPool
             revert InvalidPaymasterInput();
         }
 
-        if (_enabledApps[_toAddress(_transaction.to)] && _transaction.paymasterInput.length > 4) {
+        if (_accessLevel[_toAddress(_transaction.to)] > 0 && _transaction.paymasterInput.length > 4) {
             context = _transaction.paymasterInput[4:];
         }
 
@@ -321,6 +322,11 @@ contract CrossAppLiquidity is Ownable, TokenReceiver, IPaymaster, ILiquidityPool
     function _sendEther(address payable _to, uint256 _amount) private {
         (bool success, ) = _to.call{ value: _amount }("");
         if (!success) revert FailedToTransferEther();
+    }
+
+    function _setAccessLevel(address app_, uint256 level_) private {
+        _accessLevel[app_] = level_;
+        emit AccessLevelUpdated(app_, level_);
     }
 
     function _getBalance(address token_) private view returns (uint256) {
