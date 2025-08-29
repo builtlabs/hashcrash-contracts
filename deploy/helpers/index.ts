@@ -1,5 +1,5 @@
 import { Deployer } from "@matterlabs/hardhat-zksync";
-import { ethers } from "ethers";
+import { ethers, Interface } from "ethers";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { Contract, Provider } from "zksync-ethers";
 import { HDNodeWallet } from "ethers";
@@ -57,6 +57,40 @@ export async function deploy(deployer: Deployer, contractName: string, args: any
     console.log(`${Artifact.contractName} was deployed to ${address}`);
 
     return contract;
+}
+
+export async function deployUpgradeable(
+    deployer: Deployer,
+    contractName: string,
+    ctor: any[] = [],
+    init: any[] = [],
+    options: { initializer?: string; proxyArtifactName?: string } = {}
+): Promise<Contract> {
+    const initializer = options.initializer ?? "initialize";
+    const proxyArtifactName = options.proxyArtifactName ?? "ERC1967Proxy";
+
+    const ImplArtifact = await deployer.loadArtifact(contractName);
+    const ProxyArtifact = await deployer.loadArtifact(proxyArtifactName);
+
+    const impl = await deployer.deploy(ImplArtifact, ctor);
+    await impl.waitForDeployment();
+    const implAddress = await impl.getAddress();
+
+    const iface = new Interface(ImplArtifact.abi);
+    const initData = iface.encodeFunctionData(initializer, init);
+
+    const proxy = await deployer.deploy(ProxyArtifact, [implAddress, initData]);
+    await proxy.waitForDeployment();
+    const proxyAddress = await proxy.getAddress();
+
+    const proxied = new Contract(proxyAddress, ImplArtifact.abi, deployer.zkWallet);
+
+    toVerify.push({ address: implAddress, constructorArguments: ctor });
+    toVerify.push({ address: proxyAddress, constructorArguments: [implAddress, initData] });
+
+    console.log(`${ImplArtifact.contractName} proxy deployed to ${proxyAddress} (impl: ${implAddress})`);
+
+    return proxied;
 }
 
 export async function tx(transaction: Promise<any>) {

@@ -6,7 +6,8 @@ import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 contract TokenReceiver {
-    address private immutable WETH;
+    /// @custom:oz-upgrades-unsafe-allow state-variable-immutable
+    address private immutable _WETH;
 
     // #######################################################################################
 
@@ -14,8 +15,15 @@ contract TokenReceiver {
 
     // #######################################################################################
 
-    constructor(address _WETH) {
-        WETH = _WETH;
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor(address weth_) {
+        _WETH = weth_;
+    }
+
+    // #######################################################################################
+
+    function weth() external view returns (address) {
+        return _WETH;
     }
 
     // #######################################################################################
@@ -26,7 +34,7 @@ contract TokenReceiver {
         }
 
         if (msg.value > 0) {
-            if (token_ != WETH) revert TokenDoesNotWrap(token_);
+            if (token_ != _WETH) revert TokenDoesNotWrap(token_);
 
             IWETH(token_).deposit{ value: msg.value }();
 

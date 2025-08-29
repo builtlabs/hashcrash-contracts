@@ -8,8 +8,13 @@ import { IGame } from "../../interfaces/IGame.sol";
 import { ILiquidityPool } from "../../interfaces/ILiquidityPool.sol";
 
 abstract contract GameUpgradeableV1 is IGame {
+    /// @custom:oz-upgrades-unsafe-allow state-variable-immutable
     ILiquidityPool immutable LIQUIDITY;
+
+    /// @custom:oz-upgrades-unsafe-allow state-variable-immutable
     address immutable RANDOMNESS;
+
+    /// @custom:oz-upgrades-unsafe-allow state-variable-immutable
     address immutable PLATFORM;
 
     // #######################################################################################

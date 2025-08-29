@@ -2,6 +2,7 @@ import { vars } from "hardhat/config";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import {
     deploy,
+    deployUpgradeable,
     getHash,
     getHashProducer,
     getPlatformFeeCollector,
@@ -35,53 +36,89 @@ export default async function (runtime: HardhatRuntimeEnvironment) {
     const hashProducer = getHashProducer(isTestnet);
     const feeCollector = getPlatformFeeCollector(isTestnet);
 
-    const platform = await deploy(deployer, "PlatformInterface", [feeCollector, weth, wallet.address]);
-    const lootTable = await deploy(deployer, "DynamicRTP10x", []);
-    const token = await deploy(deployer, "DemoERC20", []);
-    const gamemodes = [];
+    const pengu = await deploy(deployer, "DemoERC20", []);
+    const grind = await deploy(deployer, "DemoERC20", []);
 
-    const maxExposureNumerator = "1000";
+    const liquidity = await deploy(deployer, "CrossAppLiquidity", [wallet.address, weth, feeCollector, feeCollector]);
 
-    const ethGenesisHash = getHash(getSalt(seed, 0, 0));
-    const minLiquidityEth = ethers.parseEther("0.05").toString();
-    const minValueEth = ethers.parseEther("0.001").toString();
-    const hashcrashWeth = await deploy(deployer, "HashCrashNative", [
-        lootTable.target,
-        ethGenesisHash,
-        hashProducer,
-        maxExposureNumerator,
-        minLiquidityEth,
-        wallet.address,
-        weth,
-        minValueEth,
-    ]);
+    const platform = await deployUpgradeable(
+        deployer,
+        "PlatformUpgradeableV1",
+        [feeCollector, weth],
+        [wallet.address]
+    );
 
-    await tx(hashcrashWeth.deposit("0", { value: ethers.parseEther("1") }));
-    await tx(hashcrashWeth.setActive(true));
-    gamemodes.push(hashcrashWeth.target);
+    const genesisHash = getHash(getSalt(seed, 0, 0));
 
-    const grindGenesisHash = getHash(getSalt(seed, 1, 0));
-    const minLiquidityGrind = ethers.parseEther("100").toString();
-    const minValueGrind = ethers.parseEther("25").toString();
-    const hashcrashGrind = await deploy(deployer, "HashCrashERC20", [
-        lootTable.target,
-        grindGenesisHash,
-        hashProducer,
-        maxExposureNumerator,
-        minLiquidityGrind,
-        wallet.address,
-        token.target,
-        minValueGrind,
-    ]);
+    const crash = await deployUpgradeable(
+        deployer,
+        "CrashUpgradeableV1",
+        [platform.target, hashProducer, liquidity.target],
+        [genesisHash, wallet.address]
+    );
 
-    const initialBalance = ethers.parseEther("777777777");
-    await tx(token.mint(wallet.address, initialBalance));
-    await tx(token.approve(await hashcrashGrind.getAddress(), initialBalance));
-    await tx(hashcrashGrind.deposit(initialBalance));
-    await tx(hashcrashGrind.setActive(true));
-    gamemodes.push(hashcrashGrind.target);
+    const registrations = [
+        {
+            game: crash.target,
+            token: weth,
+            registration: { enabled: true, minFee: 200n, minBet: ethers.parseEther("0.001") },
+        },
+        {
+            game: crash.target,
+            token: pengu.target,
+            registration: { enabled: true, minFee: 100n, minBet: ethers.parseEther("1000") },
+        },
+        {
+            game: crash.target,
+            token: grind.target,
+            registration: { enabled: true, minFee: 300n, minBet: ethers.parseEther("100000") },
+        },
+    ];
 
-    await tx(platform.startSeason(gamemodes));
+    await tx(platform.registerMultiple(registrations));
+
+    await tx(
+        liquidity.setTokenSettings(weth, {
+            enabled: true,
+            feeBps: 50,
+            bufferBps: 500,
+            maxExposureBps: 100,
+            minShareValue: ethers.parseEther("0.001"),
+        })
+    );
+
+    await tx(
+        liquidity.setTokenSettings(pengu.target, {
+            enabled: true,
+            feeBps: 50,
+            bufferBps: 500,
+            maxExposureBps: 100,
+            minShareValue: ethers.parseEther("1000"),
+        })
+    );
+
+    await tx(
+        liquidity.setTokenSettings(grind.target, {
+            enabled: true,
+            feeBps: 50,
+            bufferBps: 500,
+            maxExposureBps: 100,
+            minShareValue: ethers.parseEther("100000"),
+        })
+    );
+
+    await tx(liquidity.setAccessLevel(crash.target, 2));
+    await tx(liquidity.setAccessLevel(platform.target, 1));
+
+    const penguBalance = ethers.parseEther("1000000");
+    await tx(pengu.mint(wallet.address, penguBalance));
+    await tx(pengu.approve(await liquidity.getAddress(), penguBalance));
+    await tx(liquidity.deposit(pengu.target, penguBalance));
+
+    const grindBalance = ethers.parseEther("100000000");
+    await tx(grind.mint(wallet.address, grindBalance));
+    await tx(grind.approve(await liquidity.getAddress(), grindBalance));
+    await tx(liquidity.deposit(grind.target, grindBalance));
 
     await verifyAll(runtime);
 }

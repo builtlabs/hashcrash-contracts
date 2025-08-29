@@ -11,7 +11,7 @@ library BPS {
             return (amount * bps) / _DENOMINATOR;
         }
     }
-    
+
     function reverse(uint256 amount, uint256 bps) internal pure returns (uint256) {
         unchecked {
             return (amount * _DENOMINATOR) / (_DENOMINATOR + bps);

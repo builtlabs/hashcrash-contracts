@@ -25,9 +25,7 @@ contract PlatformUpgradeableV1 is
 {
     uint256 private constant PLATFORM_FEE = 100;
 
-    uint8 private constant GAME_KIND = 1;
-    uint8 private constant TOKEN_KIND = 2;
-
+    /// @custom:oz-upgrades-unsafe-allow state-variable-immutable
     address private immutable PLATFORM;
 
     // #######################################################################################
