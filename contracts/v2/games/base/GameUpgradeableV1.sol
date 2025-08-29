@@ -75,6 +75,10 @@ abstract contract GameUpgradeableV1 is IGame {
 
     // #######################################################################################
 
+    function _maxExposure(address token_) internal view returns (uint256) {
+        return LIQUIDITY.getMaxExposure(token_);
+    }
+
     function _requestLiquidity(address token_, uint256 amount_) internal returns (uint256 requestId, uint256 amount) {
         (requestId, amount) = LIQUIDITY.requestLiquidity(token_, amount_);
         _setBorrowed(requestId, amount);

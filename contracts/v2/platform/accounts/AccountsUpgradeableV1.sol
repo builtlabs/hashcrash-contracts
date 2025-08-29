@@ -59,6 +59,8 @@ abstract contract AccountsUpgradeableV1 is Initializable {
         if (referrer_ != address(0)) {
             Account storage referrerAccount = $.accounts[referrer_];
 
+            // TODO: Think about migrating the referrals somehow, since this "referrerAccount.exists" breaks existing users
+            // Probably go for a "migrate accounts" function which uses the old contract
             if (referrer_ == msg.sender || !referrerAccount.exists) revert InvalidReferrer(referrer_);
 
             unchecked {

@@ -30,30 +30,22 @@ contract PlatformUpgradeableV1 is
 
     // #######################################################################################
 
-    error AlreadyRegistered();
+    error MinimumNotFound();
     error InsufficientAmount();
-    error RegistrationNotFound(uint8 kind);
 
-    event Registered(address indexed target, bool enabled, uint8 kind, uint240 min);
-    event RegistrationMinUpdated(address indexed target, uint240 min);
-    event RegistrationEnabledUpdated(address indexed target, bool enabled);
+    event MinimumAmountUpdated(address indexed game, address indexed token, uint256 minimum);
 
     // #######################################################################################
 
-    struct CreateRegistration {
-        address target;
-        Registration registration;
-    }
-
-    struct Registration {
-        bool enabled;
-        uint8 kind;
-        uint240 min;
+    struct MinimumAmountUpdate {
+        address game;
+        address token;
+        uint256 amount;
     }
 
     // #######################################################################################
 
-    mapping(address => Registration) private _registrations;
+    mapping(address => mapping(address => uint256)) private _minimumAmount;
 
     // #######################################################################################
 
@@ -70,8 +62,20 @@ contract PlatformUpgradeableV1 is
 
     // #######################################################################################
 
-    function getRegistration(address target_, uint8 kind_) external view returns (Registration memory) {
-        return _getRegistration(target_, kind_);
+    function getMinimum(address game_, address token_) external view returns (uint256) {
+        return _getMinimum(game_, token_);
+    }
+
+    function getGameMinimums(address game_, address[] calldata tokens_) external view returns (uint256[] memory) {
+        uint256[] memory minimums = new uint256[](tokens_.length);
+        for (uint256 i = 0; i < tokens_.length; ) {
+            minimums[i] = _getMinimum(game_, tokens_[i]);
+
+            unchecked {
+                ++i;
+            }
+        }
+        return minimums;
     }
 
     // #######################################################################################
@@ -81,43 +85,28 @@ contract PlatformUpgradeableV1 is
             _markSenderAsExists();
         }
 
-        Registration memory game = _getRegistration(game_, GAME_KIND);
-        Registration memory token = _getRegistration(token_, TOKEN_KIND);
+        uint256 minimum = _getMinimum(game_, token_);
 
         amount_ = _receiveValue(token_, amount_);
 
-        (uint256 fee, uint256 play) = _splitFee(amount_, token.min);
+        (uint256 bet, uint256 fee) = _splitFee(amount_);
         _processFee(token_, fee);
-        _processBet(game_, token_, play, game.min, data_);
+        _processBet(game_, token_, bet, minimum, data_);
     }
 
     // #######################################################################################
 
-    function register(CreateRegistration calldata _create) external onlyOwner {
-        _register(_create.target, _create.registration);
+    function setMinimum(MinimumAmountUpdate calldata update_) external onlyOwner {
+        _setMinimum(update_.game, update_.token, update_.amount);
     }
 
-    function registerMultiple(CreateRegistration[] calldata _create) external onlyOwner {
-        for (uint256 i = 0; i < _create.length; ) {
-            _register(_create[i].target, _create[i].registration);
+    function setMinimums(MinimumAmountUpdate[] calldata updates_) external onlyOwner {
+        for (uint256 i = 0; i < updates_.length; ) {
+            _setMinimum(updates_[i].game, updates_[i].token, updates_[i].amount);
             unchecked {
                 ++i;
             }
         }
-    }
-
-    function updateRegistrationMin(address target_, uint8 kind_, uint240 min_) external onlyOwner {
-        Registration storage registration = _getRegistrationRef(target_, kind_);
-
-        registration.min = min_;
-        emit RegistrationMinUpdated(target_, min_);
-    }
-
-    function updateRegistrationEnabled(address target_, uint8 kind_, bool enabled_) external onlyOwner {
-        Registration storage registration = _getRegistrationRef(target_, kind_);
-
-        registration.enabled = enabled_;
-        emit RegistrationEnabledUpdated(target_, enabled_);
     }
 
     // #######################################################################################
@@ -126,11 +115,9 @@ contract PlatformUpgradeableV1 is
 
     // #######################################################################################
 
-    function _register(address target_, Registration calldata registration_) private {
-        if (_registrations[target_].kind != 0) revert AlreadyRegistered();
-
-        _registrations[target_] = registration_;
-        emit Registered(target_, registration_.enabled, registration_.kind, registration_.min);
+    function _setMinimum(address game_, address token_, uint256 amount_) private {
+        _minimumAmount[game_][token_] = amount_;
+        emit MinimumAmountUpdated(game_, token_, amount_);
     }
 
     function _processFee(address token_, uint256 amount_) private {
@@ -164,31 +151,18 @@ contract PlatformUpgradeableV1 is
         IGame(game_).processBet(msg.sender, token_, amount_, data_);
     }
 
-    function _getRegistration(address target_, uint8 kind_) private view returns (Registration memory) {
-        Registration memory registration = _registrations[target_];
-        if (!registration.enabled || registration.kind != kind_) revert RegistrationNotFound(kind_);
-        return registration;
+    function _getMinimum(address game_, address token_) private view returns (uint256 minimum) {
+        minimum = _minimumAmount[game_][token_];
+        if (minimum == 0) revert MinimumNotFound();
     }
 
-    function _getRegistrationRef(address target_, uint8 kind_) private view returns (Registration storage) {
-        Registration storage registration = _registrations[target_];
-        if (!registration.enabled || registration.kind != kind_) revert RegistrationNotFound(kind_);
-        return registration;
-    }
-
-    function _splitFee(uint256 amount_, uint256 min_) private pure returns (uint256, uint256) {
-        uint256 fee = BPS.reverse(amount_, PLATFORM_FEE);
-
-        if (fee < min_) {
-            fee = min_;
-        }
-
-        if (amount_ < fee) revert InsufficientAmount();
+    function _splitFee(uint256 amount_) private pure returns (uint256, uint256) {
+        uint256 bet = BPS.reverse(amount_, PLATFORM_FEE);
 
         unchecked {
-            amount_ -= fee;
+            amount_ -= bet;
         }
 
-        return (fee, amount_);
+        return (bet, amount_);
     }
 }

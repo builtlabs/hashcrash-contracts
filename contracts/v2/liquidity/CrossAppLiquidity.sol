@@ -28,6 +28,7 @@ contract CrossAppLiquidity is Ownable, TokenReceiver, IPaymaster, ILiquidityPool
     error TokenNotEnabled(address token);
 
     error HoldNotFound();
+    error LengthMismatch();
     error InsufficientShares();
     error MaxExposureExceeded();
     error InsufficientLiquidity();
@@ -115,13 +116,73 @@ contract CrossAppLiquidity is Ownable, TokenReceiver, IPaymaster, ILiquidityPool
 
     // #######################################################################################
 
+    // TODO: View functions, thinking some kind of provide token + user?, get all useful information.
+
+    function getAccessLevel(address app_) external view returns (uint256) {
+        return _accessLevel[app_];
+    }
+
+    function getTotalShares(address token_) external view returns (uint256) {
+        return _tokens[token_].totalShares;
+    }
+
+    function getTotalBalance(address token_) external view returns (uint256) {
+        return _getBalance(token_);
+    }
+
+    function getAvailableBalance(address token_) external view returns (uint256) {
+        return _getAvailableBalance(token_);
+    }
+
+    function getUserShares(address token_, address user_) external view returns (uint256) {
+        return _tokens[token_].userShares[user_];
+    }
+
+    function getUserShareValue(address token_, address user_) external view returns (uint256) {
+        return _shareValue(_tokens[token_].userShares[user_], _getBalance(token_), _tokens[token_].totalShares);
+    }
+
+    function getMaxExposure(address token_) external view returns (uint256) {
+        return BPS.calculate(_getBalance(token_), _tokenSettings[token_].maxExposureBps);
+    }
+
+    function getTokenSettings(address token_) external view returns (TokenSettings memory) {
+        return _tokenSettings[token_];
+    }
+
+    function getMultipleTokenSettings(address[] calldata tokens_) external view returns (TokenSettings[] memory) {
+        TokenSettings[] memory settings = new TokenSettings[](tokens_.length);
+        for (uint256 i = 0; i < tokens_.length; ) {
+            settings[i] = _tokenSettings[tokens_[i]];
+            unchecked {
+                ++i;
+            }
+        }
+        return settings;
+    }
+
+    // #######################################################################################
+
     function setAccessLevel(address app_, uint256 level_) external onlyOwner {
         _setAccessLevel(app_, level_);
     }
 
     function setTokenSettings(address token_, TokenSettings calldata settings_) external onlyOwner {
-        _tokenSettings[token_] = settings_;
-        emit TokenSettingsUpdated(token_, settings_);
+        _setTokenSettings(token_, settings_);
+    }
+
+    function setMultipleTokenSettings(
+        address[] calldata tokens_,
+        TokenSettings[] calldata settings_
+    ) external onlyOwner {
+        if (tokens_.length != settings_.length) revert LengthMismatch();
+
+        for (uint256 i = 0; i < tokens_.length; ) {
+            _setTokenSettings(tokens_[i], settings_[i]);
+            unchecked {
+                ++i;
+            }
+        }
     }
 
     function withdrawGas(uint256 _amount) external onlyOwner {
@@ -162,7 +223,7 @@ contract CrossAppLiquidity is Ownable, TokenReceiver, IPaymaster, ILiquidityPool
         emit LiquidityAdded(msg.sender, token_, amount_, totalShares);
     }
 
-    function withdraw(address token_, uint256 shareAmount_) external onlyToken(token_) {
+    function withdraw(address token_, uint256 shareAmount_) external {
         // Cache current state
         uint256 currentBalance = _getBalance(token_);
         uint256 totalShares = _tokens[token_].totalShares;
@@ -327,6 +388,11 @@ contract CrossAppLiquidity is Ownable, TokenReceiver, IPaymaster, ILiquidityPool
     function _setAccessLevel(address app_, uint256 level_) private {
         _accessLevel[app_] = level_;
         emit AccessLevelUpdated(app_, level_);
+    }
+
+    function _setTokenSettings(address token_, TokenSettings calldata settings_) private {
+        _tokenSettings[token_] = settings_;
+        emit TokenSettingsUpdated(token_, settings_);
     }
 
     function _getBalance(address token_) private view returns (uint256) {

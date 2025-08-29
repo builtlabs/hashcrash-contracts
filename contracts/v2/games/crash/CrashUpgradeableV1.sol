@@ -171,39 +171,6 @@ contract CrashUpgradeableV1 is
 
     // #######################################################################################
 
-    function updateBet(address token_, uint8 index_, uint8 cashout_) external {
-        BetPool storage pool = _betPools[token_];
-        Bet storage bet = _getBet(pool, index_);
-
-        // Ensure the update is valid
-        if (_roundStartBlock <= block.number) revert RoundInProgress();
-        if (_getLength() <= cashout_) revert InvalidValue(cashout_);
-
-        // Update the round liquidity
-        uint256 amount = bet.amount;
-        uint256 profit = _profit(amount, cashout_);
-
-        uint256 available = pool.liquidity;
-
-        unchecked {
-            available += _profit(amount, bet.cashoutIndex);
-        }
-
-        if (available < profit) revert InsufficientLiquidity();
-
-        unchecked {
-            available -= profit;
-        }
-
-        pool.liquidity = uint248(available);
-
-        // Update the bet
-        bet.cashoutIndex = cashout_;
-
-        // Emit an event for the bet updated
-        emit BetCashoutUpdated(_roundHash, token_, index_, cashout_);
-    }
-
     function cancelBet(address token_, uint8 index_) external {
         BetPool storage pool = _betPools[token_];
         Bet storage bet = _getBet(pool, index_);
@@ -513,7 +480,9 @@ contract CrashUpgradeableV1 is
                 }
             }
 
-            pools_[ti] = BetPoolOutput(pool.liquidity, token, bets);
+            uint256 liquidity = count == 0 ? _maxExposure(token) : pool.liquidity;
+
+            pools_[ti] = BetPoolOutput(liquidity, token, bets);
 
             unchecked {
                 ti++;
