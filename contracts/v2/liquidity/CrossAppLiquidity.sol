@@ -163,14 +163,27 @@ contract CrossAppLiquidity is Ownable, TokenReceiver, IPaymaster, ILiquidityPool
 
     // #######################################################################################
 
+    // TODO: Create struct for this...
     function setAccessLevel(address app_, uint256 level_) external onlyOwner {
         _setAccessLevel(app_, level_);
+    }
+
+    function setAccessLevels(address[] calldata apps_, uint256[] calldata levels_) external onlyOwner {
+        if (apps_.length != levels_.length) revert LengthMismatch();
+
+        for (uint256 i = 0; i < apps_.length; ) {
+            _setAccessLevel(apps_[i], levels_[i]);
+            unchecked {
+                ++i;
+            }
+        }
     }
 
     function setTokenSettings(address token_, TokenSettings calldata settings_) external onlyOwner {
         _setTokenSettings(token_, settings_);
     }
 
+    // TODO: Create struct for this...
     function setMultipleTokenSettings(
         address[] calldata tokens_,
         TokenSettings[] calldata settings_

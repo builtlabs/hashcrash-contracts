@@ -86,7 +86,6 @@ export async function deployUpgradeable(
     const proxied = new Contract(proxyAddress, ImplArtifact.abi, deployer.zkWallet);
 
     toVerify.push({ address: implAddress, constructorArguments: ctor });
-    toVerify.push({ address: proxyAddress, constructorArguments: [implAddress, initData] });
 
     console.log(`${ImplArtifact.contractName} proxy deployed to ${proxyAddress} (impl: ${implAddress})`);
 

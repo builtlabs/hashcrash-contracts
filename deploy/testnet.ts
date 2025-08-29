@@ -41,12 +41,7 @@ export default async function (runtime: HardhatRuntimeEnvironment) {
 
     const liquidity = await deploy(deployer, "CrossAppLiquidity", [wallet.address, weth, feeCollector, feeCollector]);
 
-    const platform = await deployUpgradeable(
-        deployer,
-        "PlatformUpgradeableV1",
-        [feeCollector, weth],
-        [wallet.address]
-    );
+    const platform = await deployUpgradeable(deployer, "PlatformUpgradeableV1", [feeCollector, weth], [wallet.address]);
 
     const genesisHash = getHash(getSalt(seed, 0, 0));
 
@@ -57,58 +52,56 @@ export default async function (runtime: HardhatRuntimeEnvironment) {
         [genesisHash, wallet.address]
     );
 
-    const registrations = [
-        {
-            game: crash.target,
-            token: weth,
-            registration: { enabled: true, minFee: 200n, minBet: ethers.parseEther("0.001") },
-        },
-        {
-            game: crash.target,
-            token: pengu.target,
-            registration: { enabled: true, minFee: 100n, minBet: ethers.parseEther("1000") },
-        },
-        {
-            game: crash.target,
-            token: grind.target,
-            registration: { enabled: true, minFee: 300n, minBet: ethers.parseEther("100000") },
-        },
-    ];
-
-    await tx(platform.registerMultiple(registrations));
-
     await tx(
-        liquidity.setTokenSettings(weth, {
-            enabled: true,
-            feeBps: 50,
-            bufferBps: 500,
-            maxExposureBps: 100,
-            minShareValue: ethers.parseEther("0.001"),
-        })
+        platform.setMinimums([
+            {
+                game: crash.target,
+                token: weth,
+                amount: ethers.parseEther("0.001"),
+            },
+            {
+                game: crash.target,
+                token: pengu.target,
+                amount: ethers.parseEther("1000"),
+            },
+            {
+                game: crash.target,
+                token: grind.target,
+                amount: ethers.parseEther("100000"),
+            },
+        ])
     );
 
     await tx(
-        liquidity.setTokenSettings(pengu.target, {
-            enabled: true,
-            feeBps: 50,
-            bufferBps: 500,
-            maxExposureBps: 100,
-            minShareValue: ethers.parseEther("1000"),
-        })
+        liquidity.setMultipleTokenSettings(
+            [weth, pengu.target, grind.target],
+            [
+                {
+                    enabled: true,
+                    feeBps: 50,
+                    bufferBps: 500,
+                    maxExposureBps: 100,
+                    minShareValue: ethers.parseEther("0.001"),
+                },
+                {
+                    enabled: true,
+                    feeBps: 50,
+                    bufferBps: 500,
+                    maxExposureBps: 100,
+                    minShareValue: ethers.parseEther("1000"),
+                },
+                {
+                    enabled: true,
+                    feeBps: 50,
+                    bufferBps: 500,
+                    maxExposureBps: 100,
+                    minShareValue: ethers.parseEther("100000"),
+                },
+            ]
+        )
     );
 
-    await tx(
-        liquidity.setTokenSettings(grind.target, {
-            enabled: true,
-            feeBps: 50,
-            bufferBps: 500,
-            maxExposureBps: 100,
-            minShareValue: ethers.parseEther("100000"),
-        })
-    );
-
-    await tx(liquidity.setAccessLevel(crash.target, 2));
-    await tx(liquidity.setAccessLevel(platform.target, 1));
+    await tx(liquidity.setAccessLevels([crash.target, platform.target], [2, 1]));
 
     const penguBalance = ethers.parseEther("1000000");
     await tx(pengu.mint(wallet.address, penguBalance));
