@@ -56,6 +56,7 @@ contract CrashUpgradeableV1 is
     // #######################################################################################
 
     event RoundStarted(bytes32 indexed roundHash, uint64 hashIndex, uint64 startBlock);
+    event RoundLiquidityPopulated(bytes32 indexed roundHash, address indexed token, uint256 amount);
     event RoundEnded(bytes32 indexed roundHash, bytes32 roundSalt, uint64 deadIndex, bytes32 proof);
 
     event RoundRefunded(bytes32 indexed roundHash);
@@ -411,10 +412,12 @@ contract CrashUpgradeableV1 is
     function _remainingLiquidity(address token_) private returns (uint256) {
         BetPool storage pool = _betPools[token_];
 
-        if (pool.requestId != 0) {
+        if (pool.requestId == 0) {
             (uint256 requestId, uint256 amount) = _requestLiquidity(token_, 0);
             pool.requestId = requestId;
             pool.liquidity = uint248(amount);
+
+            emit RoundLiquidityPopulated(_roundHash, token_, amount);
 
             return amount;
         }
