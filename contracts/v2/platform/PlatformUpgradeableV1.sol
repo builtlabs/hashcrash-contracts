@@ -34,6 +34,7 @@ contract PlatformUpgradeableV1 is
     error InsufficientAmount();
 
     event MinimumAmountUpdated(address indexed game, address indexed token, uint256 minimum);
+    event BetPlaced(address indexed placedBy, address indexed game, address indexed token, uint256 amount, uint256 fee);
 
     // #######################################################################################
 
@@ -61,6 +62,10 @@ contract PlatformUpgradeableV1 is
     }
 
     // #######################################################################################
+
+    function getPlatform() external view returns (address) {
+        return PLATFORM;
+    }
 
     function getMinimum(address game_, address token_) external view returns (uint256) {
         return _getMinimum(game_, token_);
@@ -92,6 +97,8 @@ contract PlatformUpgradeableV1 is
         (uint256 bet, uint256 fee) = _splitFee(amount_);
         _processFee(token_, fee);
         _processBet(game_, token_, bet, minimum, data_);
+
+        emit BetPlaced(msg.sender, game_, token_, bet, fee);
     }
 
     // #######################################################################################
