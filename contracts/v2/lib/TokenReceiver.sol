@@ -23,10 +23,14 @@ contract TokenReceiver {
     // #######################################################################################
 
     function weth() external view returns (address) {
-        return _WETH;
+        return _wethAddress();
     }
 
     // #######################################################################################
+
+    function _wethAddress() internal view returns (address) {
+        return _WETH;
+    }
 
     function _receiveValue(address token_, uint256 amount_) internal returns (uint256) {
         if (amount_ > 0) {

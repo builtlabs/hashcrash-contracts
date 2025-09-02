@@ -3,6 +3,8 @@ pragma solidity ^0.8.24;
 
 import { BPS } from "../lib/BPS.sol";
 import { TokenReceiver } from "../lib/TokenReceiver.sol";
+
+import { IWETH } from "../interfaces/IWETH.sol";
 import { ILiquidityPool } from "../interfaces/ILiquidityPool.sol";
 
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -17,9 +19,11 @@ contract CrossAppLiquidity is Ownable, TokenReceiver, IPaymaster, ILiquidityPool
 
     address immutable _REWARD_FUND;
     address immutable _GAS_FUND;
+    address immutable _ORACLE;
 
     // #######################################################################################
 
+    error NotOracle();
     error NotBootloader();
     error InvalidPaymasterInput();
     error FailedToTransferEther();
@@ -50,13 +54,11 @@ contract CrossAppLiquidity is Ownable, TokenReceiver, IPaymaster, ILiquidityPool
         uint256 fee
     );
 
-    event GasSponsored(
-        address indexed app,
-        address indexed sender,
-        uint256 ethAmount,
-        address token,
-        uint256 tokenAmount
-    );
+    event ExchangeRateUpdated(address indexed token, uint256 rate);
+
+    event GasFunded(uint256 amount);
+    event GasSponsored(address indexed app, address indexed sender, uint256 amount);
+    event GasLiquiditySponsored(address indexed app, address indexed sender, address token, uint256 amount);
 
     // #######################################################################################
 
@@ -76,9 +78,21 @@ contract CrossAppLiquidity is Ownable, TokenReceiver, IPaymaster, ILiquidityPool
         uint256 minShareValue;
     }
 
+    struct UpdateTokenSettings {
+        address token;
+        TokenSettings settings;
+    }
+
+    struct AddressValue {
+        address addr;
+        uint256 value;
+    }
+
     // #######################################################################################
 
     mapping(address => uint256) private _accessLevel;
+
+    mapping(address => uint256) private _exchangeRateNumerator;
 
     mapping(address => Token) private _tokens;
     mapping(address => TokenSettings) private _tokenSettings;
@@ -87,6 +101,11 @@ contract CrossAppLiquidity is Ownable, TokenReceiver, IPaymaster, ILiquidityPool
 
     modifier onlyApp() {
         if (_accessLevel[msg.sender] < 2) revert AppNotEnabled(msg.sender);
+        _;
+    }
+
+    modifier onlyOracle() {
+        if (msg.sender != _ORACLE) revert NotOracle();
         _;
     }
 
@@ -105,9 +124,11 @@ contract CrossAppLiquidity is Ownable, TokenReceiver, IPaymaster, ILiquidityPool
     constructor(
         address owner_,
         address weth_,
+        address oracle_,
         address gasFund_,
         address rewardFund_
     ) Ownable(owner_) TokenReceiver(weth_) {
+        _ORACLE = oracle_;
         _GAS_FUND = gasFund_;
         _REWARD_FUND = rewardFund_;
 
@@ -146,6 +167,10 @@ contract CrossAppLiquidity is Ownable, TokenReceiver, IPaymaster, ILiquidityPool
         return BPS.calculate(_getBalance(token_), _tokenSettings[token_].maxExposureBps);
     }
 
+    function getExchangeRate(address token_) external view returns (uint256) {
+        return _exchangeRateNumerator[token_];
+    }
+
     function getTokenSettings(address token_) external view returns (TokenSettings memory) {
         return _tokenSettings[token_];
     }
@@ -163,16 +188,13 @@ contract CrossAppLiquidity is Ownable, TokenReceiver, IPaymaster, ILiquidityPool
 
     // #######################################################################################
 
-    // TODO: Create struct for this...
     function setAccessLevel(address app_, uint256 level_) external onlyOwner {
         _setAccessLevel(app_, level_);
     }
 
-    function setAccessLevels(address[] calldata apps_, uint256[] calldata levels_) external onlyOwner {
-        if (apps_.length != levels_.length) revert LengthMismatch();
-
-        for (uint256 i = 0; i < apps_.length; ) {
-            _setAccessLevel(apps_[i], levels_[i]);
+    function setAccessLevels(AddressValue[] calldata accessLevel_) external onlyOwner {
+        for (uint256 i = 0; i < accessLevel_.length; ) {
+            _setAccessLevel(accessLevel_[i].addr, accessLevel_[i].value);
             unchecked {
                 ++i;
             }
@@ -183,15 +205,22 @@ contract CrossAppLiquidity is Ownable, TokenReceiver, IPaymaster, ILiquidityPool
         _setTokenSettings(token_, settings_);
     }
 
-    // TODO: Create struct for this...
-    function setMultipleTokenSettings(
-        address[] calldata tokens_,
-        TokenSettings[] calldata settings_
-    ) external onlyOwner {
-        if (tokens_.length != settings_.length) revert LengthMismatch();
+    function setMultipleTokenSettings(UpdateTokenSettings[] calldata updates_) external onlyOwner {
+        for (uint256 i = 0; i < updates_.length; ) {
+            _setTokenSettings(updates_[i].token, updates_[i].settings);
+            unchecked {
+                ++i;
+            }
+        }
+    }
 
-        for (uint256 i = 0; i < tokens_.length; ) {
-            _setTokenSettings(tokens_[i], settings_[i]);
+    function setExchangeRate(address token_, uint256 rate_) external onlyOracle {
+        _setExchangeRate(token_, rate_);
+    }
+
+    function setMultipleExchangeRates(AddressValue[] calldata rates_) external onlyOracle {
+        for (uint256 i = 0; i < rates_.length; ) {
+            _setExchangeRate(rates_[i].addr, rates_[i].value);
             unchecked {
                 ++i;
             }
@@ -366,30 +395,36 @@ contract CrossAppLiquidity is Ownable, TokenReceiver, IPaymaster, ILiquidityPool
         ExecutionResult, // _txResult
         uint256 _maxRefundedGas
     ) external payable onlyBootloader {
+        address app = _toAddress(_transaction.to);
+        address sender = _toAddress(_transaction.from);
+
+        uint256 minWeiSpent = (_transaction.gasLimit - _maxRefundedGas) * _transaction.maxFeePerGas;
+        emit GasSponsored(app, sender, minWeiSpent);
+
         if (_context.length > 0) {
-            // TODO: This exchange rate cannot be done like this, as a user can provide whatever they like, this is for testing purposes only
-            // Either:
-            // A) Write to chain every x minutes
-            // B) Sign the value
-            (address token, uint256 exchangeRateNumerator) = abi.decode(_context, (address, uint256));
+            address token = abi.decode(_context, (address));
+            address weth = _wethAddress();
 
-            uint256 minWeiSpent = (_transaction.gasLimit - _maxRefundedGas) * _transaction.maxFeePerGas;
-            uint256 minTokenSpent = (minWeiSpent * exchangeRateNumerator) / _EXCHANGE_RATE_DENOMINATOR;
+            if (token == weth) {
+                IWETH(weth).withdraw(minWeiSpent);
+                emit GasLiquiditySponsored(app, sender, token, minWeiSpent);
+            } else {
+                uint256 exchangeRateNumerator = _exchangeRateNumerator[token];
 
-            _sendValue(token, _GAS_FUND, minTokenSpent);
-            emit GasSponsored(
-                _toAddress(_transaction.to),
-                _toAddress(_transaction.from),
-                minWeiSpent,
-                token,
-                minTokenSpent
-            );
+                if (exchangeRateNumerator > 0) {
+                    uint256 minTokenSpent = (minWeiSpent * exchangeRateNumerator) / _EXCHANGE_RATE_DENOMINATOR;
+                    _sendValue(token, _GAS_FUND, minTokenSpent);
+                    emit GasLiquiditySponsored(app, sender, token, minTokenSpent);
+                }
+            }
         }
     }
 
     // #######################################################################################
 
-    receive() external payable {}
+    receive() external payable {
+        emit GasFunded(msg.value);
+    }
 
     // #######################################################################################
 
@@ -401,6 +436,11 @@ contract CrossAppLiquidity is Ownable, TokenReceiver, IPaymaster, ILiquidityPool
     function _setAccessLevel(address app_, uint256 level_) private {
         _accessLevel[app_] = level_;
         emit AccessLevelUpdated(app_, level_);
+    }
+
+    function _setExchangeRate(address token_, uint256 rate_) private {
+        _exchangeRateNumerator[token_] = rate_;
+        emit ExchangeRateUpdated(token_, rate_);
     }
 
     function _setTokenSettings(address token_, TokenSettings calldata settings_) private {
