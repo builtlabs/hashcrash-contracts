@@ -91,12 +91,6 @@ abstract contract AccountsUpgradeableV1 is Initializable {
 
     // #######################################################################################
 
-    function _markSenderAsExists() internal {
-        _createAccount(Account(true, address(0), 0));
-    }
-
-    // #######################################################################################
-
     function _createAccount(Account memory account_) internal {
         _getAccountsStorage().accounts[msg.sender] = account_;
         emit AccountCreated(msg.sender, account_.referredBy);

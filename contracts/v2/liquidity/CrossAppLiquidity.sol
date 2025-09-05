@@ -39,8 +39,10 @@ contract CrossAppLiquidity is Ownable, TokenReceiver, IPaymaster, ILiquidityPool
     error InsufficientShareValue();
 
     event AccessLevelUpdated(address indexed app, uint256 level);
+    event ExchangeRateUpdated(address indexed token, uint256 rate);
     event TokenSettingsUpdated(address indexed token, TokenSettings settings);
 
+    // TODO: Standardise this...
     event LiquidityAdded(address indexed user, address indexed token, uint256 amount, uint256 shares);
     event LiquidityRemoved(address indexed user, address indexed token, uint256 tokenDelta, uint256 shareDelta);
 
@@ -53,8 +55,6 @@ contract CrossAppLiquidity is Ownable, TokenReceiver, IPaymaster, ILiquidityPool
         uint256 outgoing,
         uint256 fee
     );
-
-    event ExchangeRateUpdated(address indexed token, uint256 rate);
 
     event GasFunded(uint256 amount);
     event GasSponsored(address indexed app, address indexed sender, uint256 amount);
@@ -70,6 +70,7 @@ contract CrossAppLiquidity is Ownable, TokenReceiver, IPaymaster, ILiquidityPool
         mapping(address => uint256) userShares;
     }
 
+    // TODO: rename BPS
     struct TokenSettings {
         bool enabled;
         uint32 feeBps;

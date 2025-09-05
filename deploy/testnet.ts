@@ -39,7 +39,13 @@ export default async function (runtime: HardhatRuntimeEnvironment) {
     const pengu = await deploy(deployer, "DemoERC20", []);
     const grind = await deploy(deployer, "DemoERC20", []);
 
-    const liquidity = await deploy(deployer, "CrossAppLiquidity", [wallet.address, weth, feeCollector, feeCollector]);
+    const liquidity = await deploy(deployer, "CrossAppLiquidity", [
+        wallet.address,
+        weth,
+        hashProducer,
+        feeCollector,
+        feeCollector,
+    ]);
 
     const platform = await deployUpgradeable(deployer, "PlatformUpgradeableV1", [feeCollector, weth], [wallet.address]);
 
@@ -73,35 +79,48 @@ export default async function (runtime: HardhatRuntimeEnvironment) {
     );
 
     await tx(
-        liquidity.setMultipleTokenSettings(
-            [weth, pengu.target, grind.target],
-            [
-                {
+        liquidity.setMultipleTokenSettings([
+            {
+                token: weth,
+                settings: {
                     enabled: true,
                     feeBps: 50,
                     bufferBps: 500,
                     maxExposureBps: 100,
                     minShareValue: ethers.parseEther("0.001"),
                 },
-                {
+            },
+
+            {
+                token: pengu.target,
+                settings: {
                     enabled: true,
                     feeBps: 50,
                     bufferBps: 500,
                     maxExposureBps: 100,
                     minShareValue: ethers.parseEther("1000"),
                 },
-                {
+            },
+
+            {
+                token: grind.target,
+                settings: {
                     enabled: true,
                     feeBps: 50,
                     bufferBps: 500,
                     maxExposureBps: 100,
                     minShareValue: ethers.parseEther("100000"),
                 },
-            ]
-        )
+            },
+        ])
     );
 
-    await tx(liquidity.setAccessLevels([crash.target, platform.target], [2, 1]));
+    await tx(
+        liquidity.setAccessLevels([
+            { addr: crash.target, value: 2 },
+            { addr: platform.target, value: 1 },
+        ])
+    );
 
     const penguBalance = ethers.parseEther("1000000");
     await tx(pengu.mint(wallet.address, penguBalance));

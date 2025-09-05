@@ -87,7 +87,7 @@ contract PlatformUpgradeableV1 is
 
     function placeBet(address game_, address token_, uint256 amount_, bytes calldata data_) external payable {
         if (!_getAccountExists(msg.sender)) {
-            _markSenderAsExists();
+            _createAccount(Account(true, address(0), 0));
         }
 
         uint256 minimum = _getMinimum(game_, token_);

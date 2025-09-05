@@ -61,7 +61,7 @@ contract CrashUpgradeableV1 is
 
     event RoundRefunded(bytes32 indexed roundHash);
 
-    event BetPlaced(bytes32 indexed roundHash, Bet bet);
+    event BetPlaced(bytes32 indexed roundHash, address token, Bet bet);
     event BetCashoutUpdated(bytes32 indexed roundHash, address token, uint8 index, uint8 cashoutIndex);
     event BetCancelled(bytes32 indexed roundHash, address token, uint8 index);
 
@@ -169,6 +169,8 @@ contract CrashUpgradeableV1 is
         betPools_ = _getBetPools(tokens_);
         blockHashes_ = _getBlockHashes(startBlock_);
     }
+
+    // TODO: Add "Migrate hash" function to move over the hash + hashIndex
 
     // #######################################################################################
 
@@ -332,6 +334,7 @@ contract CrashUpgradeableV1 is
                     }
                 } else {
                     _sendValue(token, bet.user, amount);
+                    emit BetCancelled(_roundHash, token, bet.localIndex);
                 }
 
                 unchecked {
@@ -391,7 +394,7 @@ contract CrashUpgradeableV1 is
         Bet memory bet = Bet(amount_, placedBy_, cashoutIndex, totalBets, localBets, betChannel, false);
         betPool.bets[localBets] = bet;
 
-        emit BetPlaced(_roundHash, bet);
+        emit BetPlaced(_roundHash, token_, bet);
     }
 
     // ########################################################################################
