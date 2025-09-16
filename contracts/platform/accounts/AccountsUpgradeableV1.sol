@@ -52,23 +52,7 @@ abstract contract AccountsUpgradeableV1 is Initializable {
     // #######################################################################################
 
     function createAccount(address referrer_) external {
-        AccountsStorage storage $ = _getAccountsStorage();
-
-        if ($.accounts[msg.sender].exists) revert AccountAlreadyExists(msg.sender);
-
-        if (referrer_ != address(0)) {
-            Account storage referrerAccount = $.accounts[referrer_];
-
-            // TODO: Think about migrating the referrals somehow, since this "referrerAccount.exists" breaks existing users
-            // Probably go for a "migrate accounts" function which uses the old contract
-            if (referrer_ == msg.sender || !referrerAccount.exists) revert InvalidReferrer(referrer_);
-
-            unchecked {
-                ++referrerAccount.referralCount;
-            }
-        }
-
-        _createAccount(Account(true, referrer_, 0));
+        _createAccount(referrer_);
     }
 
     // #######################################################################################
@@ -91,7 +75,25 @@ abstract contract AccountsUpgradeableV1 is Initializable {
 
     // #######################################################################################
 
-    function _createAccount(Account memory account_) internal {
+    function _createAccount(address referrer_) internal {
+        AccountsStorage storage $ = _getAccountsStorage();
+
+        if ($.accounts[msg.sender].exists) revert AccountAlreadyExists(msg.sender);
+
+        if (referrer_ != address(0)) {
+            Account storage referrerAccount = $.accounts[referrer_];
+
+            if (referrer_ == msg.sender || !referrerAccount.exists) revert InvalidReferrer(referrer_);
+
+            unchecked {
+                ++referrerAccount.referralCount;
+            }
+        }
+
+        _uncheckedCreateAccount(Account(true, referrer_, 0));
+    }
+
+    function _uncheckedCreateAccount(Account memory account_) internal {
         _getAccountsStorage().accounts[msg.sender] = account_;
         emit AccountCreated(msg.sender, account_.referredBy);
     }

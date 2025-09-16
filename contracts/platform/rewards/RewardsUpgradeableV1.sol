@@ -87,8 +87,6 @@ abstract contract RewardsUpgradeableV1 is Initializable {
 
     // #######################################################################################
 
-    // TODO: Should be able to read this.
-
     function _getReferralBPS(uint256 depth_, uint64 referralCount_) internal pure returns (uint256) {
         if (depth_ > 1 || referralCount_ == 0) return 0;
         return [[500, 1000, 1500, 2000, 2500], [200, 400, 600, 800, 1000]][depth_][_referralMultiplier(referralCount_)];

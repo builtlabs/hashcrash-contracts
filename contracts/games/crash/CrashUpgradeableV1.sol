@@ -10,6 +10,8 @@ import { EIP712Upgradeable } from "@openzeppelin/contracts-upgradeable/utils/cry
 
 import { BPS } from "../../lib/BPS.sol";
 
+import { ILegacyCrash } from "../../interfaces/ILegacyCrash.sol";
+
 import { NineSeven25x } from "./loot/NineSeven25x.sol";
 import { GameUpgradeableV1 } from "../base/GameUpgradeableV1.sol";
 
@@ -170,7 +172,15 @@ contract CrashUpgradeableV1 is
         blockHashes_ = _getBlockHashes(startBlock_);
     }
 
-    // TODO: Add "Migrate hash" function to move over the hash + hashIndex
+    // #######################################################################################
+
+    function migrateHashIndex(ILegacyCrash legacy_) external onlyOwner {
+        if (_hashIndex != 0) revert InvalidValue(_hashIndex);
+        if (_roundStartBlock != 0) revert RoundInProgress();
+
+        _hashIndex = legacy_.getHashIndex();
+        _roundHash = legacy_.getRoundHash();
+    }
 
     // #######################################################################################
 

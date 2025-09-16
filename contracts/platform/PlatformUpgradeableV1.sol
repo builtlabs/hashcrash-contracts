@@ -12,8 +12,10 @@ import { AccountsUpgradeableV1 } from "./accounts/AccountsUpgradeableV1.sol";
 import { RewardsUpgradeableV1 } from "./rewards/RewardsUpgradeableV1.sol";
 
 import { IGame } from "../interfaces/IGame.sol";
-import { TokenReceiver } from "../lib/TokenReceiver.sol";
+import { ILegacyPlatform } from "../interfaces/ILegacyPlatform.sol";
+
 import { BPS } from "../lib/BPS.sol";
+import { TokenReceiver } from "../lib/TokenReceiver.sol";
 
 contract PlatformUpgradeableV1 is
     TokenReceiver,
@@ -85,9 +87,21 @@ contract PlatformUpgradeableV1 is
 
     // #######################################################################################
 
+    function migrateAccounts(ILegacyPlatform legacy_, address[] calldata users_) external onlyOwner {
+        for (uint256 i = 0; i < users_.length; ) {
+            if (!_getAccountExists(users_[i])) {
+                _createAccount(legacy_.getReferredBy(users_[i]));
+            }
+
+            unchecked {
+                ++i;
+            }
+        }
+    }
+
     function placeBet(address game_, address token_, uint256 amount_, bytes calldata data_) external payable {
         if (!_getAccountExists(msg.sender)) {
-            _createAccount(Account(true, address(0), 0));
+            _uncheckedCreateAccount(Account(true, address(0), 0));
         }
 
         uint256 minimum = _getMinimum(game_, token_);

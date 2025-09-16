@@ -42,9 +42,8 @@ contract CrossAppLiquidity is Ownable, TokenReceiver, IPaymaster, ILiquidityPool
     event ExchangeRateUpdated(address indexed token, uint256 rate);
     event TokenSettingsUpdated(address indexed token, TokenSettings settings);
 
-    // TODO: Standardise this...
     event LiquidityAdded(address indexed user, address indexed token, uint256 amount, uint256 shares);
-    event LiquidityRemoved(address indexed user, address indexed token, uint256 tokenDelta, uint256 shareDelta);
+    event LiquidityRemoved(address indexed user, address indexed token, uint256 amount, uint256 shares);
 
     event LiquidityHoldPlaced(address indexed app, address indexed token, uint256 amount, uint256 requestId);
     event LiquidityHoldResolved(
@@ -70,12 +69,11 @@ contract CrossAppLiquidity is Ownable, TokenReceiver, IPaymaster, ILiquidityPool
         mapping(address => uint256) userShares;
     }
 
-    // TODO: rename BPS
     struct TokenSettings {
         bool enabled;
-        uint32 feeBps;
-        uint32 bufferBps;
-        uint32 maxExposureBps;
+        uint32 feeBPS;
+        uint32 bufferBPS;
+        uint32 maxExposureBPS;
         uint256 minShareValue;
     }
 
@@ -87,6 +85,22 @@ contract CrossAppLiquidity is Ownable, TokenReceiver, IPaymaster, ILiquidityPool
     struct AddressValue {
         address addr;
         uint256 value;
+    }
+
+    struct TokenData {
+        address token;
+        uint256 totalShares;
+        uint256 totalBalance;
+        uint256 availableBalance;
+        uint256 exchangeRate;
+        uint256 maxExposure;
+        TokenSettings settings;
+    }
+
+    struct UserTokenData {
+        address token;
+        uint256 shares;
+        uint256 shareValue;
     }
 
     // #######################################################################################
@@ -138,8 +152,6 @@ contract CrossAppLiquidity is Ownable, TokenReceiver, IPaymaster, ILiquidityPool
 
     // #######################################################################################
 
-    // TODO: View functions, thinking some kind of provide token + user?, get all useful information.
-
     function getAccessLevel(address app_) external view returns (uint256) {
         return _accessLevel[app_];
     }
@@ -156,6 +168,31 @@ contract CrossAppLiquidity is Ownable, TokenReceiver, IPaymaster, ILiquidityPool
         return _getAvailableBalance(token_);
     }
 
+    function getMaxExposure(address token_) external view override returns (uint256) {
+        return _getMaxExposure(token_);
+    }
+
+    function getExchangeRate(address token_) external view returns (uint256) {
+        return _exchangeRateNumerator[token_];
+    }
+
+    function getMultipleExchangeRates(address[] calldata tokens_) external view returns (AddressValue[] memory rates) {
+        rates = new AddressValue[](tokens_.length);
+
+        for (uint256 i = 0; i < tokens_.length; ) {
+            rates[i] = AddressValue(tokens_[i], _exchangeRateNumerator[tokens_[i]]);
+            unchecked {
+                ++i;
+            }
+        }
+
+        return rates;
+    }
+
+    function getTokenSettings(address token_) external view returns (TokenSettings memory) {
+        return _tokenSettings[token_];
+    }
+
     function getUserShares(address token_, address user_) external view returns (uint256) {
         return _tokens[token_].userShares[user_];
     }
@@ -164,27 +201,52 @@ contract CrossAppLiquidity is Ownable, TokenReceiver, IPaymaster, ILiquidityPool
         return _shareValue(_tokens[token_].userShares[user_], _getBalance(token_), _tokens[token_].totalShares);
     }
 
-    function getMaxExposure(address token_) external view returns (uint256) {
-        return BPS.calculate(_getBalance(token_), _tokenSettings[token_].maxExposureBps);
-    }
+    function getTokenData(address[] calldata tokens_) external view returns (TokenData[] memory tokenData) {
+        tokenData = new TokenData[](tokens_.length);
 
-    function getExchangeRate(address token_) external view returns (uint256) {
-        return _exchangeRateNumerator[token_];
-    }
-
-    function getTokenSettings(address token_) external view returns (TokenSettings memory) {
-        return _tokenSettings[token_];
-    }
-
-    function getMultipleTokenSettings(address[] calldata tokens_) external view returns (TokenSettings[] memory) {
-        TokenSettings[] memory settings = new TokenSettings[](tokens_.length);
         for (uint256 i = 0; i < tokens_.length; ) {
-            settings[i] = _tokenSettings[tokens_[i]];
+            address token = tokens_[i];
+
+            Token storage t = _tokens[token];
+            tokenData[i] = TokenData({
+                token: token,
+                totalShares: t.totalShares,
+                totalBalance: _getBalance(token),
+                availableBalance: _getAvailableBalance(token),
+                exchangeRate: _exchangeRateNumerator[token],
+                maxExposure: _getMaxExposure(token),
+                settings: _tokenSettings[token]
+            });
             unchecked {
                 ++i;
             }
         }
-        return settings;
+
+        return tokenData;
+    }
+
+    function getUserTokenData(
+        address user_,
+        address[] calldata tokens_
+    ) external view returns (UserTokenData[] memory userTokenData) {
+        userTokenData = new UserTokenData[](tokens_.length);
+
+        for (uint256 i = 0; i < tokens_.length; ) {
+            address token = tokens_[i];
+            uint256 shares = _tokens[token].userShares[user_];
+
+            userTokenData[i] = UserTokenData({
+                token: token,
+                shares: shares,
+                shareValue: _shareValue(shares, _getBalance(token), _tokens[token].totalShares)
+            });
+
+            unchecked {
+                ++i;
+            }
+        }
+
+        return userTokenData;
     }
 
     // #######################################################################################
@@ -310,14 +372,14 @@ contract CrossAppLiquidity is Ownable, TokenReceiver, IPaymaster, ILiquidityPool
         uint256 totalBalance = availableBalance + onHold;
 
         // Ensure amount is within limits
-        uint256 limit = BPS.calculate(totalBalance, _tokenSettings[token_].maxExposureBps);
+        uint256 limit = BPS.calculate(totalBalance, _tokenSettings[token_].maxExposureBPS);
         if (amount_ == 0) {
             amount_ = limit;
         } else if (amount_ > limit) {
             revert MaxExposureExceeded();
         }
 
-        limit = BPS.calculate(totalBalance, _tokenSettings[token_].bufferBps);
+        limit = BPS.calculate(totalBalance, _tokenSettings[token_].bufferBPS);
         if (availableBalance < amount_ || availableBalance - amount_ < limit) {
             revert InsufficientLiquidity();
         }
@@ -351,7 +413,7 @@ contract CrossAppLiquidity is Ownable, TokenReceiver, IPaymaster, ILiquidityPool
 
         uint256 fee = 0;
         if (incoming_ > 0) {
-            fee = BPS.calculate(incoming_, _tokenSettings[token_].feeBps);
+            fee = BPS.calculate(incoming_, _tokenSettings[token_].feeBPS);
             _sendValue(token_, _GAS_FUND, fee);
         }
 
@@ -447,6 +509,10 @@ contract CrossAppLiquidity is Ownable, TokenReceiver, IPaymaster, ILiquidityPool
     function _setTokenSettings(address token_, TokenSettings calldata settings_) private {
         _tokenSettings[token_] = settings_;
         emit TokenSettingsUpdated(token_, settings_);
+    }
+
+    function _getMaxExposure(address token_) private view returns (uint256) {
+        return BPS.calculate(_getBalance(token_), _tokenSettings[token_].maxExposureBPS);
     }
 
     function _getBalance(address token_) private view returns (uint256) {

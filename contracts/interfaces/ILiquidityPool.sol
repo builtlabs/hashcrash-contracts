@@ -2,7 +2,7 @@
 pragma solidity ^0.8.24;
 
 /// @title ILiquidityPool
-/// @notice TODO
+/// @notice
 interface ILiquidityPool {
     function getMaxExposure(address token_) external view returns (uint256);
 
