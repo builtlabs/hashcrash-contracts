@@ -36,15 +36,15 @@ describe("TokenReceiver", function () {
         it("Should set the weth address", async function () {
             const { sut, weth } = await loadFixture(fixture);
 
-            expect(await sut.weth()).to.equal(weth.target);
+            expect(await sut.getWeth()).to.equal(weth.target);
         });
     });
 
-    describe("weth", function () {
+    describe("getWeth", function () {
         it("Should get the weth address", async function () {
             const { sut, weth } = await loadFixture(fixture);
 
-            expect(await sut.weth()).to.equal(weth.target);
+            expect(await sut.getWeth()).to.equal(weth.target);
         });
     });
 

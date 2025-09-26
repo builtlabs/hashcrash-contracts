@@ -8,17 +8,31 @@ import { IWETH } from "../interfaces/IWETH.sol";
 import { ILiquidityPool } from "../interfaces/ILiquidityPool.sol";
 
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
+import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 import { IPaymasterFlow } from "@matterlabs/zksync-contracts/contracts/l2-contracts/interfaces/IPaymasterFlow.sol";
 import { IPaymaster, ExecutionResult, PAYMASTER_VALIDATION_SUCCESS_MAGIC } from "@matterlabs/zksync-contracts/contracts/l2-contracts/interfaces/IPaymaster.sol";
 import { BOOTLOADER_ADDRESS, Transaction } from "@matterlabs/zksync-contracts/contracts/l2-contracts/L2ContractHelper.sol";
 
-contract CrossAppLiquidity is Ownable, TokenReceiver, IPaymaster, ILiquidityPool {
-    uint256 private constant _EXCHANGE_RATE_DENOMINATOR = 1e16;
+contract CrossAppLiquidityV1 is
+    Initializable,
+    UUPSUpgradeable,
+    OwnableUpgradeable,
+    TokenReceiver,
+    IPaymaster,
+    ILiquidityPool
+{
+    uint256 private constant _EXCHANGE_RATE_DENOMINATOR = 0.01 ether;
 
+    /// @custom:oz-upgrades-unsafe-allow state-variable-immutable
     address immutable _REWARD_FUND;
+
+    /// @custom:oz-upgrades-unsafe-allow state-variable-immutable
     address immutable _GAS_FUND;
+
+    /// @custom:oz-upgrades-unsafe-allow state-variable-immutable
     address immutable _ORACLE;
 
     // #######################################################################################
@@ -32,7 +46,6 @@ contract CrossAppLiquidity is Ownable, TokenReceiver, IPaymaster, ILiquidityPool
     error TokenNotEnabled(address token);
 
     error HoldNotFound();
-    error LengthMismatch();
     error InsufficientShares();
     error MaxExposureExceeded();
     error InsufficientLiquidity();
@@ -65,8 +78,8 @@ contract CrossAppLiquidity is Ownable, TokenReceiver, IPaymaster, ILiquidityPool
         uint256 onHold;
         uint256 totalShares;
         uint256 nextRequestId;
-        mapping(uint256 => uint256) requests;
         mapping(address => uint256) userShares;
+        mapping(uint256 => AddressValue) requests;
     }
 
     struct TokenSettings {
@@ -136,28 +149,57 @@ contract CrossAppLiquidity is Ownable, TokenReceiver, IPaymaster, ILiquidityPool
 
     // #######################################################################################
 
-    constructor(
-        address owner_,
-        address weth_,
-        address oracle_,
-        address gasFund_,
-        address rewardFund_
-    ) Ownable(owner_) TokenReceiver(weth_) {
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor(address oracle_, address gasFund_, address rewardFund_, address weth_) TokenReceiver(weth_) {
         _ORACLE = oracle_;
         _GAS_FUND = gasFund_;
         _REWARD_FUND = rewardFund_;
+
+        _disableInitializers();
+    }
+
+    function initialize(address owner_) public initializer {
+        __Ownable_init(owner_);
 
         _setAccessLevel(address(this), 1);
     }
 
     // #######################################################################################
 
+    function getExchangeRateDenominator() external pure returns (uint256) {
+        return _EXCHANGE_RATE_DENOMINATOR;
+    }
+
+    function getRewardFund() external view returns (address) {
+        return _REWARD_FUND;
+    }
+
+    function getGasFund() external view returns (address) {
+        return _GAS_FUND;
+    }
+
+    function getOracle() external view returns (address) {
+        return _ORACLE;
+    }
+
     function getAccessLevel(address app_) external view returns (uint256) {
         return _accessLevel[app_];
     }
 
+    function getOnHold(address token_) external view returns (uint256) {
+        return _tokens[token_].onHold;
+    }
+
     function getTotalShares(address token_) external view returns (uint256) {
         return _tokens[token_].totalShares;
+    }
+
+    function getNextRequestId(address token_) external view returns (uint256) {
+        return _tokens[token_].nextRequestId;
+    }
+
+    function getHoldRequest(address token_, uint256 requestId_) external view returns (AddressValue memory) {
+        return _tokens[token_].requests[requestId_];
     }
 
     function getTotalBalance(address token_) external view returns (uint256) {
@@ -277,6 +319,14 @@ contract CrossAppLiquidity is Ownable, TokenReceiver, IPaymaster, ILiquidityPool
         }
     }
 
+    function withdrawGas(uint256 _amount) external onlyOwner {
+        _sendEther(payable(_GAS_FUND), _amount);
+    }
+
+    function withdrawAllGas() external onlyOwner {
+        _sendEther(payable(_GAS_FUND), address(this).balance);
+    }
+
     function setExchangeRate(address token_, uint256 rate_) external onlyOracle {
         _setExchangeRate(token_, rate_);
     }
@@ -288,14 +338,6 @@ contract CrossAppLiquidity is Ownable, TokenReceiver, IPaymaster, ILiquidityPool
                 ++i;
             }
         }
-    }
-
-    function withdrawGas(uint256 _amount) external onlyOwner {
-        _sendEther(payable(_GAS_FUND), _amount);
-    }
-
-    function withdrawAllGas() external onlyOwner {
-        _sendEther(payable(_GAS_FUND), address(this).balance);
     }
 
     // #######################################################################################
@@ -387,7 +429,7 @@ contract CrossAppLiquidity is Ownable, TokenReceiver, IPaymaster, ILiquidityPool
         // Place hold
         uint256 nextRequestId = _tokens[token_].nextRequestId;
 
-        _tokens[token_].requests[nextRequestId] = amount_;
+        _tokens[token_].requests[nextRequestId] = AddressValue(msg.sender, amount_);
         unchecked {
             _tokens[token_].onHold = onHold + amount_;
             _tokens[token_].nextRequestId = nextRequestId + 1;
@@ -400,16 +442,11 @@ contract CrossAppLiquidity is Ownable, TokenReceiver, IPaymaster, ILiquidityPool
         return (nextRequestId, amount_);
     }
 
-    function settleLiquidityRequest(
-        uint256 requestId_,
-        address token_,
-        uint256 incoming_,
-        uint256 outgoing_
-    ) external onlyApp onlyToken(token_) {
-        uint256 hold = _tokens[token_].requests[requestId_];
+    function settleLiquidityRequest(uint256 requestId_, address token_, uint256 incoming_, uint256 outgoing_) external {
+        AddressValue memory hold = _tokens[token_].requests[requestId_];
         delete _tokens[token_].requests[requestId_];
 
-        if (hold == 0) revert HoldNotFound();
+        if (hold.value == 0 || hold.addr != msg.sender) revert HoldNotFound();
 
         uint256 fee = 0;
         if (incoming_ > 0) {
@@ -418,7 +455,7 @@ contract CrossAppLiquidity is Ownable, TokenReceiver, IPaymaster, ILiquidityPool
         }
 
         unchecked {
-            _tokens[token_].onHold -= hold;
+            _tokens[token_].onHold -= hold.value;
         }
 
         emit LiquidityHoldResolved(msg.sender, token_, requestId_, incoming_, outgoing_, fee);
@@ -488,6 +525,10 @@ contract CrossAppLiquidity is Ownable, TokenReceiver, IPaymaster, ILiquidityPool
     receive() external payable {
         emit GasFunded(msg.value);
     }
+
+    // #######################################################################################
+
+    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 
     // #######################################################################################
 

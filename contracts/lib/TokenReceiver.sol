@@ -22,7 +22,7 @@ contract TokenReceiver {
 
     // #######################################################################################
 
-    function weth() external view returns (address) {
+    function getWeth() external view returns (address) {
         return _wethAddress();
     }
 
