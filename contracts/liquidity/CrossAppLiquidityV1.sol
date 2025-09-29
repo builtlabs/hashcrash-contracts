@@ -2,7 +2,7 @@
 pragma solidity ^0.8.24;
 
 import { BPS } from "../lib/BPS.sol";
-import { TokenReceiver } from "../lib/TokenReceiver.sol";
+import { ValueReceiver } from "../lib/ValueReceiver.sol";
 
 import { IWETH } from "../interfaces/IWETH.sol";
 import { ILiquidityPool } from "../interfaces/ILiquidityPool.sol";
@@ -20,7 +20,7 @@ contract CrossAppLiquidityV1 is
     Initializable,
     UUPSUpgradeable,
     OwnableUpgradeable,
-    TokenReceiver,
+    ValueReceiver,
     IPaymaster,
     ILiquidityPool
 {
@@ -150,7 +150,7 @@ contract CrossAppLiquidityV1 is
     // #######################################################################################
 
     /// @custom:oz-upgrades-unsafe-allow constructor
-    constructor(address oracle_, address gasFund_, address rewardFund_, address weth_) TokenReceiver(weth_) {
+    constructor(address oracle_, address gasFund_, address rewardFund_, address weth_) ValueReceiver(weth_) {
         _ORACLE = oracle_;
         _GAS_FUND = gasFund_;
         _REWARD_FUND = rewardFund_;
@@ -372,26 +372,33 @@ contract CrossAppLiquidityV1 is
 
     function withdraw(address token_, uint256 shareAmount_) external {
         // Cache current state
-        uint256 currentBalance = _getBalance(token_);
+        uint256 availableBalance = _getAvailableBalance(token_);
+        uint256 totalBalance = availableBalance + _tokens[token_].onHold;
+
         uint256 totalShares = _tokens[token_].totalShares;
         uint256 userShares = _tokens[token_].userShares[msg.sender];
 
         // Ensure user has enough shares
         if (userShares < shareAmount_) revert InsufficientShares();
 
-        // Offset current state by withdrawn amounts
-        uint256 withdrawAmount = _shareValue(shareAmount_, currentBalance, totalShares);
+        // Calculate withdraw amount
+        uint256 withdrawAmount = _shareValue(shareAmount_, totalBalance, totalShares);
 
+        // Ensure sufficient available liquidity
+        if (withdrawAmount > availableBalance) {
+            revert InsufficientLiquidity();
+        }
+
+        // Offset current state by withdrawn amounts
         unchecked {
             userShares -= shareAmount_;
             totalShares -= shareAmount_;
-            currentBalance -= withdrawAmount;
+            totalBalance -= withdrawAmount;
         }
 
         // Ensure sufficient share value after withdrawal
         if (
-            userShares > 0 &&
-            _shareValue(userShares, currentBalance, totalShares) < _tokenSettings[token_].minShareValue
+            userShares > 0 && _shareValue(userShares, totalBalance, totalShares) < _tokenSettings[token_].minShareValue
         ) {
             revert InsufficientShareValue();
         }
@@ -400,7 +407,7 @@ contract CrossAppLiquidityV1 is
         _tokens[token_].userShares[msg.sender] = userShares;
         _tokens[token_].totalShares = totalShares;
 
-        _sendValue(token_, msg.sender, withdrawAmount);
+        _sendToken(token_, msg.sender, withdrawAmount);
 
         emit LiquidityRemoved(msg.sender, token_, withdrawAmount, totalShares);
     }
@@ -435,7 +442,7 @@ contract CrossAppLiquidityV1 is
             _tokens[token_].nextRequestId = nextRequestId + 1;
         }
 
-        _sendValue(token_, msg.sender, amount_);
+        _sendToken(token_, msg.sender, amount_);
 
         emit LiquidityHoldPlaced(msg.sender, token_, amount_, nextRequestId);
 
@@ -448,10 +455,12 @@ contract CrossAppLiquidityV1 is
 
         if (hold.value == 0 || hold.addr != msg.sender) revert HoldNotFound();
 
+        _receiveToken(token_, incoming_ + hold.value - outgoing_);
+
         uint256 fee = 0;
         if (incoming_ > 0) {
             fee = BPS.calculate(incoming_, _tokenSettings[token_].feeBPS);
-            _sendValue(token_, _GAS_FUND, fee);
+            _sendToken(token_, _GAS_FUND, fee);
         }
 
         unchecked {
@@ -513,7 +522,7 @@ contract CrossAppLiquidityV1 is
 
                 if (exchangeRateNumerator > 0) {
                     uint256 minTokenSpent = (minWeiSpent * exchangeRateNumerator) / _EXCHANGE_RATE_DENOMINATOR;
-                    _sendValue(token, _GAS_FUND, minTokenSpent);
+                    _sendToken(token, _GAS_FUND, minTokenSpent);
                     emit GasLiquiditySponsored(app, sender, token, minTokenSpent);
                 }
             }

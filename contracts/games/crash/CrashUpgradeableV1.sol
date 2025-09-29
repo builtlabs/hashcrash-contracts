@@ -197,7 +197,7 @@ contract CrashUpgradeableV1 is
         uint256 amount = bet.amount;
 
         // Partially refund the user
-        _sendValue(token_, bet.user, BPS.calculate(amount, _CANCEL_RETURN_NUMERATOR));
+        _sendToken(token_, bet.user, BPS.calculate(amount, _CANCEL_RETURN_NUMERATOR));
 
         // Update the round liquidity
         uint248 profit = uint248(_profit(amount, bet.cashoutIndex));
@@ -283,7 +283,7 @@ contract CrashUpgradeableV1 is
                     uint8 cashoutIndex = bet.cashoutIndex;
                     if (cashoutIndex < deadIndex) {
                         uint256 win = _multiply(amount, cashoutIndex);
-                        _sendValue(token, bet.user, win);
+                        _sendToken(token, bet.user, win);
                         unchecked {
                             outgoing += win;
                         }
@@ -343,7 +343,7 @@ contract CrashUpgradeableV1 is
                         incoming += fee;
                     }
                 } else {
-                    _sendValue(token, bet.user, amount);
+                    _sendToken(token, bet.user, amount);
                     emit BetCancelled(_roundHash, token, bet.localIndex);
                 }
 
