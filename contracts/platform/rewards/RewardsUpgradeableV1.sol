@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
+import { ERC20Holder } from "../../lib/ERC20Holder.sol";
+
 import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-
-abstract contract RewardsUpgradeableV1 is Initializable {
+abstract contract RewardsUpgradeableV1 is Initializable, ERC20Holder {
     error MissingRewardForToken(address token);
 
     event RewardEarned(address indexed user, address indexed token, uint256 amount);
@@ -64,7 +63,7 @@ abstract contract RewardsUpgradeableV1 is Initializable {
             if (reward == 0) revert MissingRewardForToken(token);
 
             $.rewards[token][msg.sender] = 0;
-            SafeERC20.safeTransfer(IERC20(token), msg.sender, reward);
+            _sendToken(token, msg.sender, reward);
             emit RewardClaimed(msg.sender, token, reward);
 
             unchecked {

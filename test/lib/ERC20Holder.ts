@@ -6,7 +6,7 @@ const oneEther = ethers.parseEther("1");
 
 // TODO: Approval tests
 
-describe("TokenReceiver", function () {
+describe.only("ERC20Holder", function () {
     async function fixture() {
         const [deployer, user, recipient] = await ethers.getSigners();
 
@@ -14,7 +14,7 @@ describe("TokenReceiver", function () {
         const token = await MockERC20.deploy();
         await token.waitForDeployment();
 
-        const TokenReceiverHarness = await ethers.getContractFactory("TokenReceiverHarness");
+        const TokenReceiverHarness = await ethers.getContractFactory("ERC20HolderHarness");
         const sut = await TokenReceiverHarness.deploy();
         await sut.waitForDeployment();
 
@@ -28,6 +28,16 @@ describe("TokenReceiver", function () {
             },
         };
     }
+
+    describe("_approveToken", function () {
+        it("Should set the token approval", async function () {
+            const { sut, token, wallets } = await loadFixture(fixture);
+
+            await sut.approveToken(token.target, wallets.recipient.address, oneEther);
+
+            expect(await token.allowance(sut.target, wallets.recipient.address)).to.equal(oneEther);
+        });
+    });
 
     describe("_receiveToken", function () {
         it("Should revert if transferFrom returns false", async function () {
@@ -63,6 +73,24 @@ describe("TokenReceiver", function () {
                 .withArgs(wallets.deployer.address, 0, oneEther);
         });
 
+        it("Should do nothing if the amount is zero", async function () {
+            const { sut, token, wallets } = await loadFixture(fixture);
+
+            await token.mint(wallets.deployer.address, oneEther);
+            await token.approve(sut.target, oneEther);
+
+            const sutBalanceBefore = await token.balanceOf(sut.target);
+            const deployerBalanceBefore = await token.balanceOf(wallets.deployer.address);
+
+            await sut.receiveToken(token.target, 0n);
+
+            const sutBalanceAfter = await token.balanceOf(sut.target);
+            const deployerBalanceAfter = await token.balanceOf(wallets.deployer.address);
+
+            expect(sutBalanceAfter).to.equal(sutBalanceBefore);
+            expect(deployerBalanceAfter).to.equal(deployerBalanceBefore);
+        });
+
         it("Should receive the token amount", async function () {
             const { sut, token, wallets } = await loadFixture(fixture);
 
@@ -79,6 +107,15 @@ describe("TokenReceiver", function () {
 
             expect(sutBalanceAfter).to.equal(sutBalanceBefore + oneEther);
             expect(deployerBalanceAfter).to.equal(deployerBalanceBefore - oneEther);
+        });
+
+        it("Should return the token amount", async function () {
+            const { sut, token, wallets } = await loadFixture(fixture);
+
+            await token.mint(wallets.deployer.address, oneEther);
+            await token.approve(sut.target, oneEther);
+
+            await expect(sut.receiveToken(token.target, oneEther)).to.emit(sut, "ReceiveReturn").withArgs(oneEther);
         });
     });
 
@@ -121,6 +158,18 @@ describe("TokenReceiver", function () {
 
             expect(await token.balanceOf(wallets.recipient.address)).to.equal(oneEther);
             expect(await token.balanceOf(sut.target)).to.equal(0n);
+        });
+    });
+
+    describe("_tokenBalance", function () {
+        it("Should return the token balance", async function () {
+            const { sut, token, wallets } = await loadFixture(fixture);
+
+            expect(await sut.tokenBalance(token.target)).to.equal(0n);
+
+            await token.mint(sut.target, oneEther);
+
+            expect(await sut.tokenBalance(token.target)).to.equal(oneEther);
         });
     });
 });

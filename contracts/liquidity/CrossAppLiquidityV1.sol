@@ -2,12 +2,11 @@
 pragma solidity ^0.8.24;
 
 import { BPS } from "../lib/BPS.sol";
-import { ValueReceiver } from "../lib/ValueReceiver.sol";
+import { ERC20Holder } from "../lib/ERC20Holder.sol";
+import { NativeHolder } from "../lib/NativeHolder.sol";
 
-import { IWETH } from "../interfaces/IWETH.sol";
 import { ILiquidityPool } from "../interfaces/ILiquidityPool.sol";
 
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
@@ -17,12 +16,13 @@ import { IPaymaster, ExecutionResult, PAYMASTER_VALIDATION_SUCCESS_MAGIC } from 
 import { BOOTLOADER_ADDRESS, Transaction } from "@matterlabs/zksync-contracts/contracts/l2-contracts/L2ContractHelper.sol";
 
 contract CrossAppLiquidityV1 is
+    ILiquidityPool,
+    IPaymaster,
+    ERC20Holder,
+    NativeHolder,
     Initializable,
     UUPSUpgradeable,
-    OwnableUpgradeable,
-    ValueReceiver,
-    IPaymaster,
-    ILiquidityPool
+    OwnableUpgradeable
 {
     uint256 private constant _EXCHANGE_RATE_DENOMINATOR = 0.01 ether;
 
@@ -40,7 +40,6 @@ contract CrossAppLiquidityV1 is
     error NotOracle();
     error NotBootloader();
     error InvalidPaymasterInput();
-    error FailedToTransferEther();
 
     error AppNotEnabled(address app);
     error TokenNotEnabled(address token);
@@ -150,7 +149,7 @@ contract CrossAppLiquidityV1 is
     // #######################################################################################
 
     /// @custom:oz-upgrades-unsafe-allow constructor
-    constructor(address oracle_, address gasFund_, address rewardFund_, address weth_) ValueReceiver(weth_) {
+    constructor(address oracle_, address gasFund_, address rewardFund_, address weth_) NativeHolder(weth_) {
         _ORACLE = oracle_;
         _GAS_FUND = gasFund_;
         _REWARD_FUND = rewardFund_;
@@ -344,7 +343,7 @@ contract CrossAppLiquidityV1 is
 
     function deposit(address token_, uint256 amount_) external payable onlyToken(token_) {
         // Wrap any native ether, standardize behavior between weth and other erc20's.
-        amount_ = _receiveValue(token_, amount_);
+        amount_ = _receiveToken(token_, amount_) + _receiveEther(token_);
 
         // Get current balance and user shares
         uint256 currentBalance = _getBalance(token_);
@@ -512,10 +511,9 @@ contract CrossAppLiquidityV1 is
 
         if (_context.length > 0) {
             address token = abi.decode(_context, (address));
-            address weth = _wethAddress();
 
-            if (token == weth) {
-                IWETH(weth).withdraw(minWeiSpent);
+            if (_isWETH(token)) {
+                _unwrapWETH(minWeiSpent);
                 emit GasLiquiditySponsored(app, sender, token, minWeiSpent);
             } else {
                 uint256 exchangeRateNumerator = _exchangeRateNumerator[token];
@@ -540,11 +538,6 @@ contract CrossAppLiquidityV1 is
     function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 
     // #######################################################################################
-
-    function _sendEther(address payable _to, uint256 _amount) private {
-        (bool success, ) = _to.call{ value: _amount }("");
-        if (!success) revert FailedToTransferEther();
-    }
 
     function _setAccessLevel(address app_, uint256 level_) private {
         _accessLevel[app_] = level_;
@@ -573,7 +566,7 @@ contract CrossAppLiquidityV1 is
     }
 
     function _getAvailableBalance(address token_) private view returns (uint256) {
-        return IERC20(token_).balanceOf(address(this));
+        return _tokenBalance(token_);
     }
 
     function _shareValue(uint256 userShares_, uint256 balance_, uint256 totalShares_) private pure returns (uint256) {
