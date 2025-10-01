@@ -44,6 +44,20 @@ abstract contract GameUpgradeableV1 is IGame, ERC20Holder {
 
     // #######################################################################################
 
+    function getPlatform() external view returns (address) {
+        return PLATFORM;
+    }
+
+    function getRandomness() external view returns (address) {
+        return RANDOMNESS;
+    }
+
+    function getLiquidity() external view returns (address) {
+        return LIQUIDITY;
+    }
+
+    // #######################################################################################
+
     function enableToken(address token_) external onlyPlatform {
         _approveToken(token_, LIQUIDITY, type(uint256).max);
     }
