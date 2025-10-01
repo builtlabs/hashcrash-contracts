@@ -4,5 +4,7 @@ pragma solidity ^0.8.24;
 /// @title IGame
 /// @notice
 interface IGame {
+    function enableToken(address token_) external;
+
     function processBet(address placedBy_, address token_, uint256 amount_, bytes calldata data_) external;
 }

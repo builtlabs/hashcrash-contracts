@@ -5,9 +5,6 @@ import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/I
 import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-
 import { AccountsUpgradeableV1 } from "./accounts/AccountsUpgradeableV1.sol";
 import { RewardsUpgradeableV1 } from "./rewards/RewardsUpgradeableV1.sol";
 
@@ -15,10 +12,10 @@ import { IGame } from "../interfaces/IGame.sol";
 import { ILegacyPlatform } from "../interfaces/ILegacyPlatform.sol";
 
 import { BPS } from "../lib/BPS.sol";
-import { TokenReceiver } from "../lib/TokenReceiver.sol";
+import { NativeHolder } from "../lib/NativeHolder.sol";
 
 contract PlatformUpgradeableV1 is
-    TokenReceiver,
+    NativeHolder,
     Initializable,
     UUPSUpgradeable,
     OwnableUpgradeable,
@@ -32,28 +29,35 @@ contract PlatformUpgradeableV1 is
 
     // #######################################################################################
 
-    error MinimumNotFound();
+    error GameModeInactive();
     error InsufficientAmount();
 
-    event MinimumAmountUpdated(address indexed game, address indexed token, uint256 minimum);
+    event GameModeAdded(address indexed game, address indexed token, uint256 minBetAmount);
+    event GameModeUpdated(address indexed game, address indexed token, uint256 minBetAmount);
+
     event BetPlaced(address indexed placedBy, address indexed game, address indexed token, uint256 amount, uint256 fee);
 
     // #######################################################################################
 
-    struct MinimumAmountUpdate {
+    struct GameToken {
         address game;
         address token;
-        uint256 amount;
+    }
+
+    struct GameMode {
+        address game;
+        address token;
+        uint256 minBetAmount;
     }
 
     // #######################################################################################
 
-    mapping(address => mapping(address => uint256)) private _minimumAmount;
+    mapping(address => mapping(address => uint256)) private _minBetAmount;
 
     // #######################################################################################
 
     /// @custom:oz-upgrades-unsafe-allow constructor
-    constructor(address platform_, address weth_) TokenReceiver(weth_) {
+    constructor(address platform_, address weth_) NativeHolder(weth_) {
         PLATFORM = platform_;
 
         _disableInitializers();
@@ -70,13 +74,13 @@ contract PlatformUpgradeableV1 is
     }
 
     function getMinimum(address game_, address token_) external view returns (uint256) {
-        return _getMinimum(game_, token_);
+        return _minBetAmount[game_][token_];
     }
 
     function getGameMinimums(address game_, address[] calldata tokens_) external view returns (uint256[] memory) {
         uint256[] memory minimums = new uint256[](tokens_.length);
         for (uint256 i = 0; i < tokens_.length; ) {
-            minimums[i] = _getMinimum(game_, tokens_[i]);
+            minimums[i] = _minBetAmount[game_][tokens_[0]];
 
             unchecked {
                 ++i;
@@ -100,30 +104,46 @@ contract PlatformUpgradeableV1 is
     }
 
     function placeBet(address game_, address token_, uint256 amount_, bytes calldata data_) external payable {
+        uint256 minBet = _minBetAmount[game_][token_];
+        if (minBet == 0) revert GameModeInactive();
+
         if (!_getAccountExists(msg.sender)) {
             _uncheckedCreateAccount(Account(true, address(0), 0));
         }
 
-        uint256 minimum = _getMinimum(game_, token_);
-
-        amount_ = _receiveValue(token_, amount_);
+        amount_ = _receiveToken(token_, amount_) + _receiveEther(token_);
 
         (uint256 bet, uint256 fee) = _splitFee(amount_);
         _processFee(token_, fee);
-        _processBet(game_, token_, bet, minimum, data_);
+        _processBet(game_, token_, bet, minBet, data_);
 
         emit BetPlaced(msg.sender, game_, token_, bet, fee);
     }
 
     // #######################################################################################
 
-    function setMinimum(MinimumAmountUpdate calldata update_) external onlyOwner {
-        _setMinimum(update_.game, update_.token, update_.amount);
+    function addGameMode(address game_, address token_, uint256 minBetAmount_) external onlyOwner {
+        _addGameMode(game_, token_, minBetAmount_);
     }
 
-    function setMinimums(MinimumAmountUpdate[] calldata updates_) external onlyOwner {
-        for (uint256 i = 0; i < updates_.length; ) {
-            _setMinimum(updates_[i].game, updates_[i].token, updates_[i].amount);
+    function addGameModes(GameMode[] calldata modes_) external onlyOwner {
+        for (uint256 i = 0; i < modes_.length; ) {
+            _addGameMode(modes_[i].game, modes_[i].token, modes_[i].minBetAmount);
+
+            unchecked {
+                ++i;
+            }
+        }
+    }
+
+    function updateGameMode(address game_, address token_, uint256 minBetAmount_) external onlyOwner {
+        _updateGameMode(game_, token_, minBetAmount_);
+    }
+
+    function updateGameModes(GameMode[] calldata modes_) external onlyOwner {
+        for (uint256 i = 0; i < modes_.length; ) {
+            _updateGameMode(modes_[i].game, modes_[i].token, modes_[i].minBetAmount);
+
             unchecked {
                 ++i;
             }
@@ -136,9 +156,19 @@ contract PlatformUpgradeableV1 is
 
     // #######################################################################################
 
-    function _setMinimum(address game_, address token_, uint256 amount_) private {
-        _minimumAmount[game_][token_] = amount_;
-        emit MinimumAmountUpdated(game_, token_, amount_);
+    function _addGameMode(address game_, address token_, uint256 minBetAmount_) private {
+        _approveToken(token_, game_, type(uint256).max);
+        IGame(game_).enableToken(token_);
+
+        if (minBetAmount_ == 0) revert InsufficientAmount();
+
+        _minBetAmount[game_][token_] = minBetAmount_;
+        emit GameModeAdded(game_, token_, minBetAmount_);
+    }
+
+    function _updateGameMode(address game_, address token_, uint256 minBetAmount_) private {
+        _minBetAmount[game_][token_] = minBetAmount_;
+        emit GameModeUpdated(game_, token_, minBetAmount_);
     }
 
     function _processFee(address token_, uint256 amount_) private {
@@ -167,14 +197,7 @@ contract PlatformUpgradeableV1 is
 
     function _processBet(address game_, address token_, uint256 amount_, uint256 min_, bytes calldata data_) private {
         if (amount_ < min_) revert InsufficientAmount();
-
-        IERC20(token_).transfer(address(game_), amount_);
         IGame(game_).processBet(msg.sender, token_, amount_, data_);
-    }
-
-    function _getMinimum(address game_, address token_) private view returns (uint256 minimum) {
-        minimum = _minimumAmount[game_][token_];
-        if (minimum == 0) revert MinimumNotFound();
     }
 
     function _splitFee(uint256 amount_) private pure returns (uint256, uint256) {
