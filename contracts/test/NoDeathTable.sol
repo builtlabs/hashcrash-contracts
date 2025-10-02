@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-import { LootTable } from "../loot/LootTable.sol";
+import { LootTable } from "../games/crash/loot/LootTable.sol";
 
 contract NoDeathTable is LootTable {
     function _getLength() internal pure override returns (uint256) {

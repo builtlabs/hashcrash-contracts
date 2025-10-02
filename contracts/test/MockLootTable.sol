@@ -1,9 +1,17 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-import { LootTable } from "../loot/LootTable.sol";
+import { LootTable } from "../games/crash/loot/LootTable.sol";
 
 contract MockLootTable is LootTable {
+    function multiply(uint256 _value, uint256 _index) external pure returns (uint256) {
+        return _multiply(_value, _index);
+    }
+
+    function profit(uint256 _value, uint256 _index) external pure returns (uint256) {
+        return _profit(_value, _index);
+    }
+
     function _getLength() internal pure override returns (uint256) {
         return 1;
     }

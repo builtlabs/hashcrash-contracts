@@ -68,6 +68,11 @@ abstract contract LootTable {
         return _getDeadIndex(_salt, _roundStartBlock);
     }
 
+    /// @notice Returns whether the given random number results in death at the given index.
+    function isDead(uint256 _rng, uint256 _index) external pure validIndex(_index) returns (bool) {
+        return _isDead(_rng, _index);
+    }
+
     // #######################################################################################
 
     function _multiply(uint256 _value, uint256 _index) internal pure validIndex(_index) returns (uint256) {

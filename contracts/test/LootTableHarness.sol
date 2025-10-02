@@ -1,7 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-import { ILootTable } from "../interfaces/ILootTable.sol";
+interface ILootTable {
+    function getLength() external view returns (uint256);
+
+    function isDead(uint256 _rng, uint256 _index) external view returns (bool);
+}
 
 contract LootTableHarness {
     ILootTable private immutable _sut;
