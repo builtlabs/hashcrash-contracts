@@ -4,7 +4,7 @@ import { ethers } from "hardhat";
 
 const oneEther = ethers.parseEther("1");
 
-describe.only("NativeHolder", function () {
+describe("NativeHolder", function () {
     async function fixture() {
         const [deployer, user, recipient, bank] = await ethers.getSigners();
 

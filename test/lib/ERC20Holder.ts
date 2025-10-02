@@ -4,9 +4,7 @@ import { ethers } from "hardhat";
 
 const oneEther = ethers.parseEther("1");
 
-// TODO: Approval tests
-
-describe.only("ERC20Holder", function () {
+describe("ERC20Holder", function () {
     async function fixture() {
         const [deployer, user, recipient] = await ethers.getSigners();
 
