@@ -3,7 +3,8 @@ import "@nomicfoundation/hardhat-toolbox";
 import "@nomicfoundation/hardhat-ethers";
 import "@matterlabs/hardhat-zksync";
 
-const ABSSCAN_API_KEY = vars.get("ABSSCAN_API_KEY");
+const ETHERSCAN_API_KEY = vars.get("ETHERSCAN_API_KEY");
+const ALCHEMY_API_KEY = vars.get("ALCHEMY_API_KEY");
 
 const config: HardhatUserConfig = {
     solidity: {
@@ -16,7 +17,7 @@ const config: HardhatUserConfig = {
         },
     },
     zksolc: {
-        version: "1.5.12",
+        version: "1.5.13",
         compilerSource: "binary",
         settings: {
             enableEraVMExtensions: true,
@@ -29,29 +30,26 @@ const config: HardhatUserConfig = {
     },
     networks: {
         abstractTestnet: {
-            url: "https://api.testnet.abs.xyz",
+            url: `https://abstract-testnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}`,
             ethNetwork: "sepolia",
             zksync: true,
             chainId: 11124,
         },
         abstractMainnet: {
-            url: "https://api.mainnet.abs.xyz",
+            url: `https://abstract-mainnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}`,
             ethNetwork: "mainnet",
             zksync: true,
             chainId: 2741,
         },
     },
     etherscan: {
-        apiKey: {
-            abstractTestnet: "TACK2D1RGYX9U7MC31SZWWQ7FCWRYQ96AD",
-            abstractMainnet: ABSSCAN_API_KEY,
-        },
+        apiKey: ETHERSCAN_API_KEY,
         customChains: [
             {
                 network: "abstractTestnet",
                 chainId: 11124,
                 urls: {
-                    apiURL: "https://api-sepolia.abscan.org/api",
+                    apiURL: "https://api.etherscan.io/v2/api",
                     browserURL: "https://sepolia.abscan.org/",
                 },
             },
@@ -59,7 +57,7 @@ const config: HardhatUserConfig = {
                 network: "abstractMainnet",
                 chainId: 2741,
                 urls: {
-                    apiURL: "https://api.abscan.org/api",
+                    apiURL: "https://api.etherscan.io/v2/api",
                     browserURL: "https://abscan.org/",
                 },
             },
